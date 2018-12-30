@@ -143,7 +143,9 @@ vector<cmove> cboard::generatePawnMoves( int color, int atSq ) const
     vector <cmove> moves;
     if ( color == 0 )
     {
-        if ( atSq / 8 == 1 && isSquareEmpty( atSq + 16 ) )
+        if ( atSq / 8 == 1                  &&
+             isSquareEmpty( atSq + 8 )      &&
+             isSquareEmpty( atSq + 16 ) )
         {
             moves.emplace_back( cpiece::PIECE::bpawn, atSq, atSq + 16 );
         }
@@ -153,7 +155,9 @@ vector<cmove> cboard::generatePawnMoves( int color, int atSq ) const
     }
     else if ( color == 1 )
     {
-        if ( atSq / 8 == 6 && isSquareEmpty( atSq - 16 ) )
+        if ( atSq / 8 == 6                  &&
+             isSquareEmpty( atSq - 8 )      &&
+             isSquareEmpty( atSq - 16 ) )
         {
             moves.emplace_back( cpiece::PIECE::wpawn, atSq, atSq - 16 );
         }
