@@ -74,15 +74,15 @@ public:
 
     cmove() = delete;
 
-    cmove( cpiece p, int fromSq, int toSq ) noexcept
-        : _p( p ),
+    cmove( cpiece::PIECE pt, int fromSq, int toSq ) noexcept
+        : _pt( pt ),
           _fromSq( fromSq ),
           _toSq( toSq )
     {}
 
-    const cpiece& getPiece() const noexcept
+    cpiece::PIECE getPieceType() const noexcept
     {
-        return _p;
+        return _pt;
     }
 
     int getfromSq() const noexcept
@@ -97,9 +97,9 @@ public:
 
 private:
 
-    cpiece _p;
-    int    _fromSq;
-    int    _toSq;
+    cpiece::PIECE _pt;
+    int           _fromSq;
+    int           _toSq;
 };
 
 // -----------------------------------------------------------------------------
@@ -139,7 +139,7 @@ private:
         return ((sq / 8) + 2) * 12 + ((sq % 8) + 2);
     }
 
-    int cboard::fromPadded( int sq ) const noexcept
+    int fromPadded( int sq ) const noexcept
     {
         int sqRow = sq / 12;
         int sqCol = sq % 12;
@@ -157,6 +157,11 @@ private:
     vector<cmove> generateKingMoves( int color, int atSq ) const;
     vector<cmove> generateBishopLikeMoves( const cpiece::PIECE pt, int atSq ) const;
     vector<cmove> generateRookLikeMoves( const cpiece::PIECE pt, int atSq ) const;
+
+    bool isSquareEmpty( int sq ) const noexcept
+    {
+        return _sq[sq].getType() == cpiece::PIECE::none;
+    }
 
     vector<cpiece> _sq;
     int            _sideToMove = 1;

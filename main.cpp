@@ -14,6 +14,7 @@ int main()
     const char *pos="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     const char *curr_pos="rnbqkbnr/nppppppp/8/8/4K3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
     b.setBoard( pos );
+    b.display();
     /*
     b.setBoard( curr_pos );
     auto moves = b.generateMoves();

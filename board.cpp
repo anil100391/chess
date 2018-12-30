@@ -143,19 +143,22 @@ vector<cmove> cboard::generatePawnMoves( int color, int atSq ) const
     vector <cmove> moves;
     if ( color == 0 )
     {
-        if ( atSq / 8 == 1 )
+        if ( atSq / 8 == 1 && isSquareEmpty( atSq + 16 ) )
         {
-            moves.emplace_back( cpiece( cpiece::PIECE::bpawn, atSq ), atSq, atSq + 16 );
+            moves.emplace_back( cpiece::PIECE::bpawn, atSq, atSq + 16 );
         }
-        moves.emplace_back( cpiece( cpiece::PIECE::bpawn, atSq ), atSq, atSq + 8 );
+
+        if ( isSquareEmpty( atSq + 8 ) )
+            moves.emplace_back( cpiece::PIECE::bpawn, atSq, atSq + 8 );
     }
     else if ( color == 1 )
     {
-        if ( atSq / 8 == 6 )
+        if ( atSq / 8 == 6 && isSquareEmpty( atSq - 16 ) )
         {
-            moves.emplace_back( cpiece( cpiece::PIECE::wpawn, atSq ), atSq, atSq - 16 );
+            moves.emplace_back( cpiece::PIECE::wpawn, atSq, atSq - 16 );
         }
-        moves.emplace_back( cpiece( cpiece::PIECE::wpawn, atSq ), atSq, atSq - 8 );
+        if ( isSquareEmpty( atSq - 8 ) )
+            moves.emplace_back( cpiece::PIECE::wpawn, atSq, atSq - 8 );
     }
 
     return moves;
@@ -194,27 +197,27 @@ vector <cmove> cboard::generateRookLikeMoves( const cpiece::PIECE pt, int atSq )
     bool isKing = (pt == cpiece::PIECE::wking || pt == cpiece::PIECE::bking);
     for ( int i = currRow + 1; i <= (isKing ? std::min(currRow + 1, 7) : 7); i++ )
     {
-        if ( _sq[8 * i + currCol].getType() != cpiece::PIECE::none )
+        if ( !isSquareEmpty(8 * i + currCol) )
             break;
-        moves.emplace_back( cpiece( pt, atSq ), atSq, 8 * i + currCol );
+        moves.emplace_back( pt, atSq, 8 * i + currCol );
     }
     for ( int i = currRow - 1; i >= (isKing ? std::max(currRow - 1, 0) : 0); i-- )
     {
-        if ( _sq[8 * i + currCol].getType() != cpiece::PIECE::none )
+        if ( !isSquareEmpty(8 * i + currCol) )
             break;
-        moves.emplace_back( cpiece( pt, atSq ), atSq, 8 * i + currCol );
+        moves.emplace_back( pt, atSq, 8 * i + currCol );
     }
     for ( int i = currCol + 1; i <= (isKing ? std::min(currCol + 1, 7) : 7); i++ )
     {
-        if ( _sq[8 * currRow + i].getType() != cpiece::PIECE::none )
+        if ( !isSquareEmpty(8 * currRow + i) )
             break;
-        moves.emplace_back( cpiece( pt, atSq ), atSq, 8 * currRow + i );
+        moves.emplace_back( pt, atSq, 8 * currRow + i );
     }
     for ( int i = currCol - 1; i >= (isKing ? std::max(currCol - 1, 0) : 0); i-- )
     {
-        if ( _sq[8 * currRow + i].getType() != cpiece::PIECE::none )
+        if ( !isSquareEmpty(8 * currRow + i) )
             break;
-        moves.emplace_back( cpiece( pt, atSq ), atSq, 8 * currRow + i );
+        moves.emplace_back( pt, atSq, 8 * currRow + i );
     }
 
     return moves;
@@ -249,9 +252,9 @@ vector<cmove> cboard::generateBishopLikeMoves( const cpiece::PIECE pt, int atSq 
         int toSquare = toSquareRow * 8 + toSquareCol;
         if ( toSquareCol > 7 || toSquareRow > 7 )
             break;
-        if ( _sq[toSquare].getType() != cpiece::PIECE::none )
+        if ( !isSquareEmpty(toSquare) )
             break;
-        moves.emplace_back( cpiece( pt, atSq ), atSq, toSquare );
+        moves.emplace_back( pt, atSq, toSquare );
         if ( isKing )
             break;
         i++;
@@ -264,9 +267,9 @@ vector<cmove> cboard::generateBishopLikeMoves( const cpiece::PIECE pt, int atSq 
         int toSquare = toSquareRow * 8 + toSquareCol;
         if ( toSquareCol < 0 || toSquareRow < 0 )
             break;
-        if ( _sq[toSquare].getType() != cpiece::PIECE::none )
+        if ( !isSquareEmpty(toSquare) )
             break;
-        moves.emplace_back( cpiece( pt, atSq ), atSq, toSquare );
+        moves.emplace_back( pt, atSq, toSquare );
         if ( isKing )
             break;
         i++;
@@ -279,9 +282,9 @@ vector<cmove> cboard::generateBishopLikeMoves( const cpiece::PIECE pt, int atSq 
         int toSquare = toSquareRow * 8 + toSquareCol;
         if ( toSquareCol < 0 || toSquareRow>7 )
             break;
-        if ( _sq[toSquare].getType() != cpiece::PIECE::none )
+        if ( !isSquareEmpty(toSquare) )
             break;
-        moves.emplace_back( cpiece( pt, atSq ), atSq, toSquare );
+        moves.emplace_back( pt, atSq, toSquare );
         if ( isKing )
             break;
         i++;
@@ -294,9 +297,9 @@ vector<cmove> cboard::generateBishopLikeMoves( const cpiece::PIECE pt, int atSq 
         int toSquare = toSquareRow * 8 + toSquareCol;
         if ( toSquareCol > 7 || toSquareRow < 0 )
             break;
-        if ( _sq[toSquare].getType() != cpiece::PIECE::none )
+        if ( !isSquareEmpty(toSquare) )
             break;
-        moves.emplace_back( cpiece( pt, atSq ), atSq, toSquare );
+        moves.emplace_back( pt, atSq, toSquare );
         if ( isKing )
             break;
         i++;
@@ -329,8 +332,8 @@ vector<cmove> cboard::generateKnightMoves( int color, int atSq ) const
     {
         int toSquarePadded = currSqPadded + toSquareDelta;
         int toSquare = fromPadded( toSquarePadded );
-        if ( toSquare != -1 && _sq[toSquare].getType() == cpiece::PIECE::none )
-            moves.emplace_back( cpiece( pt, atSq ), atSq, toSquare );
+        if ( toSquare != -1 && isSquareEmpty(toSquare) )
+            moves.emplace_back( pt, atSq, toSquare );
     }
     return moves;
 }
@@ -339,9 +342,10 @@ vector<cmove> cboard::generateKnightMoves( int color, int atSq ) const
 // -----------------------------------------------------------------------------
 void cboard::makeMove( cmove move ) noexcept
 {
+    assert( _sq[move.getfromSq()].getType() == move.getPieceType() );
+    assert( _sq[move.gettoSq()].getType() == cpiece::PIECE::none );
     _sq[move.getfromSq()] = cpiece( cpiece::PIECE::none, move.getfromSq() );
-    _sq[move.gettoSq()] = move.getPiece();
-    _sq[move.gettoSq()].setSquare( move.gettoSq() );
+    _sq[move.gettoSq()] = cpiece( move.getPieceType(), move.gettoSq() );
     _sideToMove ^= 1;
 }
 
@@ -350,8 +354,7 @@ void cboard::makeMove( cmove move ) noexcept
 void cboard::takeMove( cmove move ) noexcept
 {
     _sq[move.gettoSq()] = cpiece( cpiece::PIECE::none, move.gettoSq() );
-    _sq[move.getfromSq()] = move.getPiece();
-    _sq[move.getfromSq()].setSquare( move.getfromSq() );
+    _sq[move.getfromSq()] = cpiece( move.getPieceType(), move.getfromSq() );
     _sideToMove ^= 1;
 }
 

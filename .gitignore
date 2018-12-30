@@ -3,3 +3,6 @@
 ################################################################################
 
 /Debug/chess.tlog
+/Debug
+/chess.vcxproj
+/chess.vcxproj.filters
