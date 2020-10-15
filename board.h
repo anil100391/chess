@@ -132,6 +132,8 @@ public:
 
     void display() const noexcept;
 
+    const cpiece& operator[](int sq) const noexcept { return _sq[sq]; }
+
 private:
 
     int toPadded(int sq) const noexcept
