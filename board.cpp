@@ -152,6 +152,24 @@ vector<cmove> cboard::generatePawnMoves( int color, int atSq ) const
 
         if ( isSquareEmpty( atSq + 8 ) )
             moves.emplace_back( cpiece::PIECE::bpawn, atSq, atSq + 8 );
+
+        if (atSq % 8 == 0)
+        {
+            if (isOccupiedByWhite(atSq + 9))
+                moves.emplace_back(cpiece::PIECE::bpawn, atSq, atSq + 9);
+        }
+        else if (atSq % 8 == 7)
+        {
+            if (isOccupiedByWhite(atSq + 7))
+                moves.emplace_back(cpiece::PIECE::bpawn, atSq, atSq + 7);
+        }
+        else
+        {
+            if (isOccupiedByWhite(atSq + 7))
+                moves.emplace_back(cpiece::PIECE::bpawn, atSq, atSq + 7);
+            if (isOccupiedByWhite(atSq + 9))
+                moves.emplace_back(cpiece::PIECE::bpawn, atSq, atSq + 9);
+        }
     }
     else if ( color == 1 )
     {
@@ -163,6 +181,24 @@ vector<cmove> cboard::generatePawnMoves( int color, int atSq ) const
         }
         if ( isSquareEmpty( atSq - 8 ) )
             moves.emplace_back( cpiece::PIECE::wpawn, atSq, atSq - 8 );
+
+        if (atSq % 8 == 7)
+        {
+            if (isOccupiedByBlack(atSq - 9))
+                moves.emplace_back(cpiece::PIECE::wpawn, atSq, atSq - 9);
+        }
+        else if (atSq % 8 == 0)
+        {
+            if (isOccupiedByBlack(atSq - 7))
+                moves.emplace_back(cpiece::PIECE::wpawn, atSq, atSq - 7);
+        }
+        else
+        {
+            if (isOccupiedByBlack(atSq - 7))
+                moves.emplace_back(cpiece::PIECE::wpawn, atSq, atSq - 7);
+            if (isOccupiedByBlack(atSq - 9))
+                moves.emplace_back(cpiece::PIECE::wpawn, atSq, atSq - 9);
+        }
     }
 
     return moves;
@@ -244,6 +280,10 @@ vector<cmove> cboard::generateBishopLikeMoves( const cpiece::PIECE pt, int atSq 
             pt == cpiece::PIECE::wbishop || pt == cpiece::PIECE::bbishop ||
             pt == cpiece::PIECE::wqueen  || pt == cpiece::PIECE::bqueen );
 
+    bool isBlack = ( pt == cpiece::PIECE::bking     ||
+                     pt == cpiece::PIECE::bbishop   ||
+                     pt == cpiece::PIECE::bqueen );
+
     vector <cmove> moves;
     int currRow = atSq / 8;
     int currCol = atSq % 8;
@@ -257,7 +297,17 @@ vector<cmove> cboard::generateBishopLikeMoves( const cpiece::PIECE pt, int atSq 
         if ( toSquareCol > 7 || toSquareRow > 7 )
             break;
         if ( !isSquareEmpty(toSquare) )
+        {
+            if (isBlack && isOccupiedByWhite(toSquare) && !isOccupiedByKing(toSquare))
+            {
+                moves.emplace_back( pt, atSq, toSquare );
+            }
+            else if (!isBlack && isOccupiedByBlack(toSquare) && !isOccupiedByKing(toSquare))
+            {
+                moves.emplace_back( pt, atSq, toSquare );
+            }
             break;
+        }
         moves.emplace_back( pt, atSq, toSquare );
         if ( isKing )
             break;
@@ -272,7 +322,17 @@ vector<cmove> cboard::generateBishopLikeMoves( const cpiece::PIECE pt, int atSq 
         if ( toSquareCol < 0 || toSquareRow < 0 )
             break;
         if ( !isSquareEmpty(toSquare) )
+        {
+            if (isBlack && isOccupiedByWhite(toSquare) && !isOccupiedByKing(toSquare))
+            {
+                moves.emplace_back( pt, atSq, toSquare );
+            }
+            else if (!isBlack && isOccupiedByBlack(toSquare) && !isOccupiedByKing(toSquare))
+            {
+                moves.emplace_back( pt, atSq, toSquare );
+            }
             break;
+        }
         moves.emplace_back( pt, atSq, toSquare );
         if ( isKing )
             break;
@@ -287,7 +347,17 @@ vector<cmove> cboard::generateBishopLikeMoves( const cpiece::PIECE pt, int atSq 
         if ( toSquareCol < 0 || toSquareRow>7 )
             break;
         if ( !isSquareEmpty(toSquare) )
+        {
+            if (isBlack && isOccupiedByWhite(toSquare) && !isOccupiedByKing(toSquare))
+            {
+                moves.emplace_back( pt, atSq, toSquare );
+            }
+            else if (!isBlack && isOccupiedByBlack(toSquare) && !isOccupiedByKing(toSquare))
+            {
+                moves.emplace_back( pt, atSq, toSquare );
+            }
             break;
+        }
         moves.emplace_back( pt, atSq, toSquare );
         if ( isKing )
             break;
@@ -302,7 +372,17 @@ vector<cmove> cboard::generateBishopLikeMoves( const cpiece::PIECE pt, int atSq 
         if ( toSquareCol > 7 || toSquareRow < 0 )
             break;
         if ( !isSquareEmpty(toSquare) )
+        {
+            if (isBlack && isOccupiedByWhite(toSquare) && !isOccupiedByKing(toSquare))
+            {
+                moves.emplace_back( pt, atSq, toSquare );
+            }
+            else if (!isBlack && isOccupiedByBlack(toSquare) && !isOccupiedByKing(toSquare))
+            {
+                moves.emplace_back( pt, atSq, toSquare );
+            }
             break;
+        }
         moves.emplace_back( pt, atSq, toSquare );
         if ( isKing )
             break;
@@ -346,10 +426,15 @@ vector<cmove> cboard::generateKnightMoves( int color, int atSq ) const
 // -----------------------------------------------------------------------------
 void cboard::makeMove( cmove move ) noexcept
 {
-    assert( _sq[move.getfromSq()].getType() == move.getPieceType() );
-    assert( _sq[move.gettoSq()].getType() == cpiece::PIECE::none );
-    _sq[move.getfromSq()] = cpiece( cpiece::PIECE::none, move.getfromSq() );
-    _sq[move.gettoSq()] = cpiece( move.getPieceType(), move.gettoSq() );
+    assert(_sq[move.getfromSq()].getType() == move.getPieceType());
+    //assert( _sq[move.gettoSq()].getType() == cpiece::PIECE::none );
+    _sq[move.getfromSq()] = cpiece(cpiece::PIECE::none, move.getfromSq());
+    if (move.getPieceType() == cpiece::PIECE::bpawn && move.getfromSq() / 8 == 6)
+        _sq[move.gettoSq()] = cpiece(cpiece::PIECE::bqueen, move.gettoSq());
+    else if (move.getPieceType() == cpiece::PIECE::wpawn && move.getfromSq() / 8 == 1)
+        _sq[move.gettoSq()] = cpiece(cpiece::PIECE::wqueen, move.gettoSq());
+    else
+        _sq[move.gettoSq()] = cpiece(move.getPieceType(), move.gettoSq());
     _sideToMove ^= 1;
 }
 

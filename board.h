@@ -165,6 +165,20 @@ private:
         return _sq[sq].getType() == cpiece::PIECE::none;
     }
 
+    bool isOccupiedByKing (int sq) const noexcept
+    {
+        return _sq[sq].getType() == cpiece::PIECE::wking || _sq[sq].getType() == cpiece::PIECE::bking ;
+    }
+
+    bool isOccupiedByBlack (int sq) const noexcept
+    {
+        return !isSquareEmpty(sq) &&  _sq[sq].pieceColor() == 0;
+    }
+
+    bool isOccupiedByWhite (int sq) const noexcept
+    {
+        return !isSquareEmpty(sq) &&  _sq[sq].pieceColor() == 1;
+    }
     vector<cpiece> _sq;
     int            _sideToMove = 1;
 };
