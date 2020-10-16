@@ -8,7 +8,7 @@
 using namespace std;
 
 
-int main()
+int main(int argc, char * argv[])
 {
     cboard b;
     const char *pos="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -25,7 +25,10 @@ int main()
         b.takeMove( m );
     }
     */
-    uint64_t perftNodes = Perft( b, 3 );
+    int depth = 0;
+    if (argc == 2)
+        depth = std::atoi(argv[1]);
+    uint64_t perftNodes = Perft( b, depth );
     std::cout << "perft: " << perftNodes << std::endl;
     cin.get();
     return 0;

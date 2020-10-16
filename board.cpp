@@ -155,19 +155,19 @@ vector<cmove> cboard::generatePawnMoves( int color, int atSq ) const
 
         if (atSq % 8 == 0)
         {
-            if (isOccupiedByWhite(atSq + 9))
+            if (isOccupiedByWhite(atSq + 9) && !isOccupiedByKing(atSq + 9))
                 moves.emplace_back(cpiece::PIECE::bpawn, atSq, atSq + 9);
         }
         else if (atSq % 8 == 7)
         {
-            if (isOccupiedByWhite(atSq + 7))
+            if (isOccupiedByWhite(atSq + 7) && !isOccupiedByKing(atSq + 7))
                 moves.emplace_back(cpiece::PIECE::bpawn, atSq, atSq + 7);
         }
         else
         {
-            if (isOccupiedByWhite(atSq + 7))
+            if (isOccupiedByWhite(atSq + 7) && !isOccupiedByKing(atSq + 7))
                 moves.emplace_back(cpiece::PIECE::bpawn, atSq, atSq + 7);
-            if (isOccupiedByWhite(atSq + 9))
+            if (isOccupiedByWhite(atSq + 9) && !isOccupiedByKing(atSq + 9))
                 moves.emplace_back(cpiece::PIECE::bpawn, atSq, atSq + 9);
         }
     }
@@ -184,19 +184,19 @@ vector<cmove> cboard::generatePawnMoves( int color, int atSq ) const
 
         if (atSq % 8 == 7)
         {
-            if (isOccupiedByBlack(atSq - 9))
+            if (isOccupiedByBlack(atSq - 9) && !isOccupiedByKing(atSq - 9))
                 moves.emplace_back(cpiece::PIECE::wpawn, atSq, atSq - 9);
         }
         else if (atSq % 8 == 0)
         {
-            if (isOccupiedByBlack(atSq - 7))
+            if (isOccupiedByBlack(atSq - 7) && !isOccupiedByKing(atSq - 7))
                 moves.emplace_back(cpiece::PIECE::wpawn, atSq, atSq - 7);
         }
         else
         {
-            if (isOccupiedByBlack(atSq - 7))
+            if (isOccupiedByBlack(atSq - 7) && !isOccupiedByKing(atSq - 7))
                 moves.emplace_back(cpiece::PIECE::wpawn, atSq, atSq - 7);
-            if (isOccupiedByBlack(atSq - 9))
+            if (isOccupiedByBlack(atSq - 9) && !isOccupiedByKing(atSq - 9))
                 moves.emplace_back(cpiece::PIECE::wpawn, atSq, atSq - 9);
         }
     }
@@ -412,12 +412,19 @@ vector<cmove> cboard::generateKnightMoves( int color, int atSq ) const
     vector <cmove> moves;
     int currSqPadded = toPadded( atSq );
     static vector<int> toSquares{23, 25, 14, 10, -10, -14, -25, -23};
-    for ( int toSquareDelta : toSquares )
+    for (int toSquareDelta : toSquares)
     {
         int toSquarePadded = currSqPadded + toSquareDelta;
-        int toSquare = fromPadded( toSquarePadded );
-        if ( toSquare != -1 && isSquareEmpty(toSquare) )
-            moves.emplace_back( pt, atSq, toSquare );
+        int toSquare = fromPadded(toSquarePadded);
+        if (toSquare == -1)
+            continue;
+
+        if ((color == 0 && isOccupiedByWhite(toSquare) && !isOccupiedByKing(toSquare)) ||
+            (color == 1 && isOccupiedByBlack(toSquare) && !isOccupiedByKing(toSquare)) ||
+            isSquareEmpty(toSquare))
+        {
+            moves.emplace_back(pt, atSq, toSquare);
+        }
     }
     return moves;
 }
