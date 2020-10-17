@@ -455,7 +455,7 @@ bool cboard::isSquareAttacked( const color& attacker, int sq ) const
                 if ( p.getColor() != attacker )
                     break;
 
-                if ( isBishop( p ) || isQueen( p ) || isKing( p ) )
+                if ( isBishop( p ) || isQueen( p ) || (isKing( p ) && i == 1) )
                     return true;
 
                 break;
@@ -495,7 +495,7 @@ bool cboard::isSquareAttacked( const color& attacker, int sq ) const
                 if ( p.getColor() != attacker )
                     break;
 
-                if ( isRook( p ) || isQueen( p ) || isKing( p ) )
+                if ( isRook( p ) || isQueen( p ) || (isKing( p ) && i == 1) )
                     return true;
 
                 break;
