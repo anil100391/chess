@@ -7,3 +7,7 @@
 /chess.vcxproj
 /chess.vcxproj.filters
 chess
+/.vs
+/.vscode
+/build
+/out
