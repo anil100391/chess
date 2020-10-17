@@ -9,6 +9,7 @@
 struct PerftResult
 {
     uint64_t nodes = 0;
+    uint32_t checks = 0;
     uint32_t captures = 0;
     uint32_t pawncaptures = 0;
     uint32_t rookcaptures = 0;
@@ -27,9 +28,6 @@ uint64_t Perft( cboard &b, unsigned int depth, PerftResult &result )
     if ( depth == 0 )
     {
         result.nodes += 1;
-        result.captures += 0;
-        result.enpassant += 0;
-
 
         return 1;
     }
@@ -57,6 +55,10 @@ uint64_t Perft( cboard &b, unsigned int depth, PerftResult &result )
             result.enpassant += 1;
 
         b.makeMove( move );
+        if ( b.isInCheck( b.sideToMove() ) )
+        {
+            result.checks += 1;
+        }
         nodes += Perft( b, depth - 1, result );
         b.takeMove( move );
     }

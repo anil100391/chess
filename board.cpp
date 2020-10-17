@@ -98,6 +98,25 @@ vector<cmove> cboard::generateMoves() const
         auto piecemoves = generateMoveforPiece( p, ii );
         moves.insert( moves.end(), piecemoves.begin(), piecemoves.end() );
     }
+
+    // remove illegal moves
+    if ( isInCheck( sideToMove() ) )
+    {
+        cboard copy = *this;
+        auto it = std::partition( moves.begin(), moves.end(),
+                                  [&copy](const cmove& m)
+                                  {
+                                      copy.makeMove( m );
+                                      bool ret = !copy.isInCheck( opposite( copy.sideToMove() ) );
+                                      copy.takeMove( m );
+                                      return ret;
+                                  } );
+        if ( it != moves.end() )
+        {
+            moves.erase( it, moves.end() );
+        }
+    }
+
     return moves;
 }
 
@@ -281,7 +300,7 @@ vector<cmove> cboard::generateKingMoves( int atSq ) const
     {
         const int *dir = directions[ii];
         int toSqRank = atSqRank + dir[0];
-        int toSqFile = atSqRank + dir[1];
+        int toSqFile = atSqFile + dir[1];
 
         if ( toSqRank < static_cast<int>(BOARD_RANK::ONE)   ||
              toSqRank > static_cast<int>(BOARD_RANK::EIGHT) ||
@@ -439,7 +458,7 @@ bool cboard::isSquareAttacked( const color& attacker, int sq ) const
                 if ( isBishop( p ) || isQueen( p ) || isKing( p ) )
                     return true;
 
-                ++i;
+                break;
             }
         }
     }
@@ -472,18 +491,27 @@ bool cboard::isSquareAttacked( const color& attacker, int sq ) const
             else
             {
                 const cpiece &p = _sq[curSq];
+
                 if ( p.getColor() != attacker )
                     break;
 
                 if ( isRook( p ) || isQueen( p ) || isKing( p ) )
                     return true;
 
-                ++i;
+                break;
             }
         }
     }
 
     return false;
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+bool cboard::isInCheck( const color &col ) const
+{
+    int ks = kingSq( col );
+    return isSquareAttacked( opposite( col ), ks );
 }
 
 // -----------------------------------------------------------------------------

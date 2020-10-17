@@ -32,6 +32,7 @@ int main(int argc, char * argv[])
     PerftResult res;
     uint64_t perftNodes = Perft( b, depth, res );
     std::cout << "perft nodes: " << res.nodes << std::endl;
+    std::cout << "perft checks: " << res.checks << std::endl;
     std::cout << "perft captures: " << res.captures << std::endl;
     std::cout << "perft captures pawn: " << res.pawncaptures << std::endl;
     std::cout << "perft captures rook: " << res.rookcaptures << std::endl;

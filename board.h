@@ -272,6 +272,11 @@ public:
     void makeMove( const cmove& move ) noexcept;
     void takeMove( const cmove& move ) noexcept;
 
+    // find out if passed square is attacked by attacker
+    bool isSquareAttacked( const color& attacker, int sq ) const;
+
+    bool isInCheck( const color &col ) const;
+
     void display() const noexcept;
 
     const cpiece& operator[](int sq) const noexcept { return _sq[sq]; }
@@ -308,10 +313,6 @@ private:
     vector<cmove> generateQueenMoves( int atSq ) const;
     vector<cmove> generateKingMoves( int atSq ) const;
 
-    // find out if passed square is attacked by attacker
-    // turn it is
-    bool isSquareAttacked( const color& attacker, int sq ) const;
-
     bool isSquareEmpty( int sq ) const noexcept
     {
         return _sq[sq].getType() == cpiece::none;
@@ -335,6 +336,16 @@ private:
     bool isOccupiedByWhite( int sq ) const noexcept
     {
         return isOccupiedBy( light, sq );
+    }
+
+    int kingSq( const color &col ) const
+    {
+        for ( int ii = 0; ii < 64; ++ii )
+            if ( isKing( _sq[ii] ) && _sq[ii].getColor() == col )
+                return ii;
+
+        assert( false );
+        return -1;
     }
 
     vector<cpiece> _sq;
