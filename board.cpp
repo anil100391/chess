@@ -1,4 +1,4 @@
-#include <map>
+#include <array>
 #include <iostream>
 #include <algorithm>
 #include "board.h"
@@ -13,18 +13,18 @@ char cpiece::toString() const noexcept
 {
     switch ( _p )
     {
-    case PIECE::bpawn: return 'p';
-    case PIECE::bknight: return 'n';
-    case PIECE::bbishop: return 'b';
-    case PIECE::brook: return 'r';
-    case PIECE::bqueen: return 'q';
-    case PIECE::bking: return 'k';
-    case PIECE::wpawn: return 'P';
-    case PIECE::wknight: return 'N';
-    case PIECE::wbishop: return 'B';
-    case PIECE::wrook: return 'R';
-    case PIECE::wqueen: return 'Q';
-    case PIECE::wking: return 'K';
+    case cpiece::bpawn: return 'p';
+    case cpiece::bknight: return 'n';
+    case cpiece::bbishop: return 'b';
+    case cpiece::brook: return 'r';
+    case cpiece::bqueen: return 'q';
+    case cpiece::bking: return 'k';
+    case cpiece::wpawn: return 'P';
+    case cpiece::wknight: return 'N';
+    case cpiece::wbishop: return 'B';
+    case cpiece::wrook: return 'R';
+    case cpiece::wqueen: return 'Q';
+    case cpiece::wking: return 'K';
     }
     return '.';
 }
@@ -33,61 +33,54 @@ char cpiece::toString() const noexcept
 // -----------------------------------------------------------------------------
 void cboard::setBoard( const char* fenstr )
 {
+    // sq 0 corresponds to A1 and sq 64 corresponds to H8
     string fen( fenstr );
-    int counter = 0;
-    for ( char c : fen )
+
+    auto sq = []( int r, int f )->int
     {
-        if ( counter >= 64 )
-            break;
+        return static_cast<int>(r) * 8 + static_cast<int>(f);
+    };
 
-        std::map<char, cpiece::PIECE> nameToenumTable{ std::make_pair( 'p', cpiece::PIECE::bpawn ),
-                                                       std::make_pair( 'b', cpiece::PIECE::bbishop ),
-                                                       std::make_pair( 'n', cpiece::PIECE::bknight ),
-                                                       std::make_pair( 'r', cpiece::PIECE::brook ),
-                                                       std::make_pair( 'q', cpiece::PIECE::bqueen ),
-                                                       std::make_pair( 'k', cpiece::PIECE::bking ),
-                                                       std::make_pair( 'P', cpiece::PIECE::wpawn ),
-                                                       std::make_pair( 'B', cpiece::PIECE::wbishop ),
-                                                       std::make_pair( 'N', cpiece::PIECE::wknight ),
-                                                       std::make_pair( 'R', cpiece::PIECE::wrook ),
-                                                       std::make_pair( 'Q', cpiece::PIECE::wqueen ),
-                                                       std::make_pair( 'K', cpiece::PIECE::wking ),
-        };
+    auto it = fen.begin();
+    for ( int r = static_cast<int>(BOARD_RANK::EIGHT); r >= static_cast<int>(BOARD_RANK::ONE) && it !=fen.end(); --r )
+    {
+        int f = static_cast<int>(BOARD_FILE::A);
+        while ( f <= static_cast<int>(BOARD_FILE::H) && it != fen.end() )
+        {
+            char c = *it;
+            ++it;
 
-        switch ( c )
-        {
-        case 'p':
-        case 'b':
-        case 'n':
-        case 'r':
-        case 'q':
-        case 'k':
-        case 'P':
-        case 'B':
-        case 'N':
-        case 'R':
-        case 'Q':
-        case 'K':
-            _sq[counter] = cpiece( nameToenumTable[c], counter );
-            counter++;
-            break;
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        {
-            for ( int i = 1; i <= c - '0'; i++ )
+            switch ( c )
             {
-                _sq[counter] = cpiece( cpiece::PIECE::none, counter );
-                counter++;
+            case 'p': _sq[sq(r, f++)] = cpiece( cpiece::bpawn ); break;
+            case 'b': _sq[sq(r, f++)] = cpiece( cpiece::bbishop ); break;
+            case 'n': _sq[sq(r, f++)] = cpiece( cpiece::bknight ); break;
+            case 'r': _sq[sq(r, f++)] = cpiece( cpiece::brook ); break;
+            case 'q': _sq[sq(r, f++)] = cpiece( cpiece::bqueen ); break;
+            case 'k': _sq[sq(r, f++)] = cpiece( cpiece::bking ); break;
+            case 'P': _sq[sq(r, f++)] = cpiece( cpiece::wpawn ); break;
+            case 'B': _sq[sq(r, f++)] = cpiece( cpiece::wbishop ); break;
+            case 'N': _sq[sq(r, f++)] = cpiece( cpiece::wknight ); break;
+            case 'R': _sq[sq(r, f++)] = cpiece( cpiece::wrook ); break;
+            case 'Q': _sq[sq(r, f++)] = cpiece( cpiece::wqueen ); break;
+            case 'K': _sq[sq(r, f++)] = cpiece( cpiece::wking ); break;
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            {
+                for ( int i = 1; i <= c - '0'; i++ )
+                {
+                    _sq[sq(r, f++)] = cpiece( cpiece::none );
+                }
             }
-        }
-        break;
-        default: break;
+            break;
+            default: break;
+            }
         }
     }
 }
@@ -97,11 +90,12 @@ void cboard::setBoard( const char* fenstr )
 vector<cmove> cboard::generateMoves() const
 {
     vector<cmove> moves;
-    for ( const cpiece &p : _sq )
+    for ( int ii = 0; ii < 64; ++ii )
     {
-        if ( p.toString() == '.' || p.pieceColor() != sideToMove() )
+        const cpiece &p = _sq[ii];
+        if ( p.getType() == cpiece::none || p.getColor() != sideToMove() )
             continue;
-        auto piecemoves = generateMoveforPiece( p );
+        auto piecemoves = generateMoveforPiece( p, ii );
         moves.insert( moves.end(), piecemoves.begin(), piecemoves.end() );
     }
     return moves;
@@ -109,28 +103,28 @@ vector<cmove> cboard::generateMoves() const
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-vector<cmove> cboard::generateMoveforPiece( const cpiece &p ) const
+vector<cmove> cboard::generateMoveforPiece( const cpiece &p, int fromSq ) const
 {
     switch ( p.getType() )
     {
-    case cpiece::PIECE::bpawn:
-    case cpiece::PIECE::wpawn:
-        return generatePawnMoves( p.pieceColor(), p.getSquare() );
-    case cpiece::PIECE::brook:
-    case cpiece::PIECE::wrook:
-        return generateRookMoves( p.pieceColor(), p.getSquare() );
-    case cpiece::PIECE::bbishop:
-    case cpiece::PIECE::wbishop:
-        return generateBishopMoves( p.pieceColor(), p.getSquare() );
-    case cpiece::PIECE::bqueen:
-    case cpiece::PIECE::wqueen:
-        return generateQueenMoves( p.pieceColor(), p.getSquare() );
-    case cpiece::PIECE::bking:
-    case cpiece::PIECE::wking:
-        return generateKingMoves( p.pieceColor(), p.getSquare() );
-    case cpiece::PIECE::bknight:
-    case cpiece::PIECE::wknight:
-        return generateKnightMoves( p.pieceColor(), p.getSquare() );
+    case cpiece::bpawn:
+    case cpiece::wpawn:
+        return generatePawnMoves( fromSq );
+    case cpiece::brook:
+    case cpiece::wrook:
+        return generateRookMoves( fromSq );
+    case cpiece::bknight:
+    case cpiece::wknight:
+        return generateKnightMoves( fromSq );
+    case cpiece::bbishop:
+    case cpiece::wbishop:
+        return generateBishopMoves( fromSq );
+    case cpiece::bqueen:
+    case cpiece::wqueen:
+        return generateQueenMoves( fromSq );
+    case cpiece::bking:
+    case cpiece::wking:
+        return generateKingMoves( fromSq );
     default: break;
     }
     return vector<cmove>();
@@ -138,67 +132,60 @@ vector<cmove> cboard::generateMoveforPiece( const cpiece &p ) const
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-vector<cmove> cboard::generatePawnMoves( int color, int atSq ) const
+vector<cmove> cboard::generatePawnMoves( int atSq ) const
 {
+    assert( isPawn( _sq[atSq].getType() ) );
+
+    const color &col = _sq[atSq].getColor();
+
     vector <cmove> moves;
-    if ( color == 0 )
+    int dir = (col == light) ? 1 : -1;
+
+    auto isPromotion = []( int toSq )
     {
-        if ( atSq / 8 == 1                  &&
-             isSquareEmpty( atSq + 8 )      &&
-             isSquareEmpty( atSq + 16 ) )
-        {
-            moves.emplace_back( cpiece::PIECE::bpawn, atSq, atSq + 16 );
-        }
+        return rank( toSq ) == BOARD_RANK::ONE || rank( toSq ) == BOARD_RANK::EIGHT;
+    };
 
-        if ( isSquareEmpty( atSq + 8 ) )
-            moves.emplace_back( cpiece::PIECE::bpawn, atSq, atSq + 8 );
+    int fromSq = atSq;
+    int toSq   = fromSq + 8 * dir;
+    if ( isSquareEmpty( toSq ) )
+    {
+        moves.emplace_back( fromSq, toSq, nopieceType(), isPromotion( toSq ) ? queenType( col ) : nopieceType() );
 
-        if (atSq % 8 == 0)
+        bool firstMove = (col == light) ? rank( atSq ) == BOARD_RANK::TWO
+                                        : rank( atSq ) == BOARD_RANK::SEVEN;
+
+        toSq = fromSq + 16 * dir;
+        if ( firstMove && isSquareEmpty( toSq ) )
         {
-            if (isOccupiedByWhite(atSq + 9) && !isOccupiedByKing(atSq + 9))
-                moves.emplace_back(cpiece::PIECE::bpawn, atSq, atSq + 9);
-        }
-        else if (atSq % 8 == 7)
-        {
-            if (isOccupiedByWhite(atSq + 7) && !isOccupiedByKing(atSq + 7))
-                moves.emplace_back(cpiece::PIECE::bpawn, atSq, atSq + 7);
-        }
-        else
-        {
-            if (isOccupiedByWhite(atSq + 7) && !isOccupiedByKing(atSq + 7))
-                moves.emplace_back(cpiece::PIECE::bpawn, atSq, atSq + 7);
-            if (isOccupiedByWhite(atSq + 9) && !isOccupiedByKing(atSq + 9))
-                moves.emplace_back(cpiece::PIECE::bpawn, atSq, atSq + 9);
+            moves.emplace_back( fromSq, toSq );
         }
     }
-    else if ( color == 1 )
-    {
-        if ( atSq / 8 == 6                  &&
-             isSquareEmpty( atSq - 8 )      &&
-             isSquareEmpty( atSq - 16 ) )
-        {
-            moves.emplace_back( cpiece::PIECE::wpawn, atSq, atSq - 16 );
-        }
-        if ( isSquareEmpty( atSq - 8 ) )
-            moves.emplace_back( cpiece::PIECE::wpawn, atSq, atSq - 8 );
 
-        if (atSq % 8 == 7)
-        {
-            if (isOccupiedByBlack(atSq - 9) && !isOccupiedByKing(atSq - 9))
-                moves.emplace_back(cpiece::PIECE::wpawn, atSq, atSq - 9);
-        }
-        else if (atSq % 8 == 0)
-        {
-            if (isOccupiedByBlack(atSq - 7) && !isOccupiedByKing(atSq - 7))
-                moves.emplace_back(cpiece::PIECE::wpawn, atSq, atSq - 7);
-        }
-        else
-        {
-            if (isOccupiedByBlack(atSq - 7) && !isOccupiedByKing(atSq - 7))
-                moves.emplace_back(cpiece::PIECE::wpawn, atSq, atSq - 7);
-            if (isOccupiedByBlack(atSq - 9) && !isOccupiedByKing(atSq - 9))
-                moves.emplace_back(cpiece::PIECE::wpawn, atSq, atSq - 9);
-        }
+    // capture moves
+    if ( file( atSq ) == BOARD_FILE::A )
+    {
+        int delta = col == light ? 9 : 7;
+        toSq = fromSq + delta * dir;
+        if ( isOccupiedBy( opposite( col ), toSq ) && !isOccupiedByKing( toSq ) )
+            moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), isPromotion( toSq ) ? queenType( col ) : nopieceType() );
+    }
+    else if ( file( atSq ) == BOARD_FILE::H )
+    {
+        int delta = col == light ? 7 : 9;
+        toSq = fromSq + delta * dir;
+        if ( isOccupiedBy( opposite( col ), toSq ) && !isOccupiedByKing( toSq ) )
+            moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), isPromotion( toSq ) ? queenType( col ) : nopieceType() );
+    }
+    else
+    {
+        toSq = fromSq + 9 * dir;
+        if ( isOccupiedBy( opposite( col ), toSq ) && !isOccupiedByKing( toSq ) )
+            moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), isPromotion( toSq ) ? queenType( col ) : nopieceType() );
+
+        toSq = fromSq + 7 * dir;
+        if ( isOccupiedBy( opposite( col ), toSq ) && !isOccupiedByKing( toSq ) )
+            moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), isPromotion( toSq ) ? queenType( col ) : nopieceType() );
     }
 
     return moves;
@@ -206,58 +193,155 @@ vector<cmove> cboard::generatePawnMoves( int color, int atSq ) const
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-vector<cmove> cboard::generateQueenMoves( int color, int atSq ) const
+vector <cmove> cboard::generateRookMoves( int atSq ) const
 {
-    cpiece::PIECE pt = color == 0 ? cpiece::PIECE::bqueen : cpiece::PIECE::wqueen;
-    vector <cmove> moves = generateRookLikeMoves( pt, atSq );
-    auto bishopmoves = generateBishopLikeMoves( pt, atSq );
+    assert( isRook( _sq[atSq].getType() ) );
+    return generateRookLikeMoves( atSq );
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+std::pair<bool, bool> cboard::addMove( int fromSq, int toSq, vector<cmove> &list ) const
+{
+    if ( !isSquareEmpty( toSq ) )
+    {
+        // check capture
+        if ( _sq[toSq].getColor() != _sq[fromSq].getColor() && !isOccupiedByKing( toSq ) )
+        {
+            list.emplace_back( fromSq, toSq, _sq[toSq].getType() );
+            return std::make_pair( true, true );
+        }
+
+        return std::make_pair( false, false );
+    }
+
+    list.emplace_back( fromSq, toSq );
+    return std::make_pair( true, false );
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+vector <cmove> cboard::generateRookLikeMoves( int atSq ) const
+{
+    vector <cmove> moves;
+
+    int currRank = static_cast<int>(rank( atSq ));
+    int currFile = static_cast<int>(file( atSq ));
+
+    static constexpr int directions[4][2] = { {1, 0}, {-1, 0}, {0, -1}, {0, 1} };
+    for ( int ii = 0; ii < 4; ++ii )
+    {
+        const int *dir = directions[ii];
+        int i = 1;
+        while ( true )
+        {
+            int toSqRank = currRank + i * dir[0];
+            int toSqFile = currFile + i * dir[1];
+            if ( toSqRank < static_cast<int>(BOARD_RANK::ONE)   ||
+                 toSqRank > static_cast<int>(BOARD_RANK::EIGHT) ||
+                 toSqFile < static_cast<int>(BOARD_FILE::A)     ||
+                 toSqFile > static_cast<int>(BOARD_FILE::H) )
+            {
+                break;
+            }
+
+            int toSq = toSqRank * 8 + toSqFile;
+            auto [added, capture] = addMove( atSq, toSq, moves );
+            if ( !added || capture )
+                break;
+            i++;
+        }
+    }
+    return moves;
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+vector<cmove> cboard::generateQueenMoves( int atSq ) const
+{
+    assert( isQueen( _sq[atSq].getType() ) );
+    vector <cmove> moves = generateRookLikeMoves( atSq );
+    vector <cmove> bishopmoves = generateBishopLikeMoves( atSq );
     moves.insert( moves.end(), bishopmoves.begin(), bishopmoves.end() );
     return moves;
 }
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-vector <cmove> cboard::generateRookMoves( int color, int atSq ) const
+vector<cmove> cboard::generateKingMoves( int atSq ) const
 {
-    cpiece::PIECE pt = color == 0 ? cpiece::PIECE::brook : cpiece::PIECE::wrook;
-    return generateRookLikeMoves( pt, atSq );
+    assert( isKing( _sq[atSq] ) );
+
+    int atSqRank = static_cast<int>(rank( atSq ));
+    int atSqFile = static_cast<int>(file( atSq ));
+
+    vector<cmove> moves;
+    static constexpr int directions[8][2] = { {1, 0},  {1, 1}, {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}, {0, -1}, {1, -1} };
+    for ( int ii = 0; ii < 8; ++ii )
+    {
+        const int *dir = directions[ii];
+        int toSqRank = atSqRank + dir[0];
+        int toSqFile = atSqRank + dir[1];
+
+        if ( toSqRank < static_cast<int>(BOARD_RANK::ONE)   ||
+             toSqRank > static_cast<int>(BOARD_RANK::EIGHT) ||
+             toSqFile < static_cast<int>(BOARD_FILE::A)     ||
+             toSqFile > static_cast<int>(BOARD_FILE::H) )
+        {
+            continue;
+        }
+
+        int toSq = toSqRank * 8 + toSqFile;
+        if ( isSquareAttacked( toSq ) )
+            continue;
+
+        auto [added, captured] = addMove( atSq, toSq, moves );
+        if ( !added || !captured )
+            continue;
+    }
+    return moves;
 }
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-vector <cmove> cboard::generateRookLikeMoves( const cpiece::PIECE pt, int atSq ) const
+vector <cmove> cboard::generateBishopMoves( int atSq ) const
 {
-    assert( pt == cpiece::PIECE::wking  || pt == cpiece::PIECE::bking ||
-            pt == cpiece::PIECE::wrook  || pt == cpiece::PIECE::brook ||
-            pt == cpiece::PIECE::wqueen || pt == cpiece::PIECE::bqueen );
+    assert( isBishop( _sq[atSq].getType() ) );
+    return generateBishopLikeMoves( atSq );
+}
 
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+vector<cmove> cboard::generateBishopLikeMoves( int atSq ) const
+{
     vector <cmove> moves;
-    int currRow = atSq / 8;
-    int currCol = atSq % 8;
-    bool isKing = (pt == cpiece::PIECE::wking || pt == cpiece::PIECE::bking);
-    for ( int i = currRow + 1; i <= (isKing ? std::min(currRow + 1, 7) : 7); i++ )
+
+    int currRank = static_cast<int>(rank( atSq ));
+    int currFile = static_cast<int>(file( atSq ));
+    static constexpr int directions[4][2] = { { 1, 1 }, { -1, -1 }, { 1, -1 }, { -1, 1 } };
+
+    for ( int ii = 0; ii < 4; ++ii )
     {
-        if ( !isSquareEmpty(8 * i + currCol) )
-            break;
-        moves.emplace_back( pt, atSq, 8 * i + currCol );
-    }
-    for ( int i = currRow - 1; i >= (isKing ? std::max(currRow - 1, 0) : 0); i-- )
-    {
-        if ( !isSquareEmpty(8 * i + currCol) )
-            break;
-        moves.emplace_back( pt, atSq, 8 * i + currCol );
-    }
-    for ( int i = currCol + 1; i <= (isKing ? std::min(currCol + 1, 7) : 7); i++ )
-    {
-        if ( !isSquareEmpty(8 * currRow + i) )
-            break;
-        moves.emplace_back( pt, atSq, 8 * currRow + i );
-    }
-    for ( int i = currCol - 1; i >= (isKing ? std::max(currCol - 1, 0) : 0); i-- )
-    {
-        if ( !isSquareEmpty(8 * currRow + i) )
-            break;
-        moves.emplace_back( pt, atSq, 8 * currRow + i );
+        const int *dir = directions[ii];
+        int i = 1;
+        while ( true )
+        {
+            int toSqRank = currRank + i * dir[0];
+            int toSqFile = currFile + i * dir[1];
+            if ( toSqRank < static_cast<int>(BOARD_RANK::ONE)   ||
+                 toSqRank > static_cast<int>(BOARD_RANK::EIGHT) ||
+                 toSqFile < static_cast<int>(BOARD_FILE::A)     ||
+                 toSqFile > static_cast<int>(BOARD_FILE::H) )
+            {
+                break;
+            }
+
+            int toSq = toSqRank * 8 + toSqFile;
+            auto [added, capture] = addMove( atSq, toSq, moves );
+            if ( !added || capture )
+                break;
+            i++;
+        }
     }
 
     return moves;
@@ -265,192 +349,68 @@ vector <cmove> cboard::generateRookLikeMoves( const cpiece::PIECE pt, int atSq )
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-vector <cmove> cboard::generateBishopMoves( int color, int atSq ) const
+vector<cmove> cboard::generateKnightMoves( int atSq ) const
 {
-    cpiece::PIECE pt = color == 0 ? cpiece::PIECE::bbishop
-                                  : cpiece::PIECE::wbishop;
-    return generateBishopLikeMoves( pt, atSq );
-}
+    assert( isKnight( _sq[atSq].getType() ) );
 
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-vector<cmove> cboard::generateBishopLikeMoves( const cpiece::PIECE pt, int atSq ) const
-{
-    assert( pt == cpiece::PIECE::wking   || pt == cpiece::PIECE::bking   ||
-            pt == cpiece::PIECE::wbishop || pt == cpiece::PIECE::bbishop ||
-            pt == cpiece::PIECE::wqueen  || pt == cpiece::PIECE::bqueen );
-
-    bool isBlack = ( pt == cpiece::PIECE::bking     ||
-                     pt == cpiece::PIECE::bbishop   ||
-                     pt == cpiece::PIECE::bqueen );
-
-    vector <cmove> moves;
-    int currRow = atSq / 8;
-    int currCol = atSq % 8;
-    bool isKing = (pt == cpiece::PIECE::wking || pt == cpiece::PIECE::bking);
-    int i = 1;
-    while ( true )
-    {
-        int toSquareRow = atSq / 8 + i;
-        int toSquareCol = atSq % 8 + i;
-        int toSquare = toSquareRow * 8 + toSquareCol;
-        if ( toSquareCol > 7 || toSquareRow > 7 )
-            break;
-        if ( !isSquareEmpty(toSquare) )
-        {
-            if (isBlack && isOccupiedByWhite(toSquare) && !isOccupiedByKing(toSquare))
-            {
-                moves.emplace_back( pt, atSq, toSquare );
-            }
-            else if (!isBlack && isOccupiedByBlack(toSquare) && !isOccupiedByKing(toSquare))
-            {
-                moves.emplace_back( pt, atSq, toSquare );
-            }
-            break;
-        }
-        moves.emplace_back( pt, atSq, toSquare );
-        if ( isKing )
-            break;
-        i++;
-    }
-    i = 1;
-    while ( true )
-    {
-        int toSquareRow = atSq / 8 - i;
-        int toSquareCol = atSq % 8 - i;
-        int toSquare = toSquareRow * 8 + toSquareCol;
-        if ( toSquareCol < 0 || toSquareRow < 0 )
-            break;
-        if ( !isSquareEmpty(toSquare) )
-        {
-            if (isBlack && isOccupiedByWhite(toSquare) && !isOccupiedByKing(toSquare))
-            {
-                moves.emplace_back( pt, atSq, toSquare );
-            }
-            else if (!isBlack && isOccupiedByBlack(toSquare) && !isOccupiedByKing(toSquare))
-            {
-                moves.emplace_back( pt, atSq, toSquare );
-            }
-            break;
-        }
-        moves.emplace_back( pt, atSq, toSquare );
-        if ( isKing )
-            break;
-        i++;
-    }
-    i = 1;
-    while ( true )
-    {
-        int toSquareRow = atSq / 8 + i;
-        int toSquareCol = atSq % 8 - i;
-        int toSquare = toSquareRow * 8 + toSquareCol;
-        if ( toSquareCol < 0 || toSquareRow>7 )
-            break;
-        if ( !isSquareEmpty(toSquare) )
-        {
-            if (isBlack && isOccupiedByWhite(toSquare) && !isOccupiedByKing(toSquare))
-            {
-                moves.emplace_back( pt, atSq, toSquare );
-            }
-            else if (!isBlack && isOccupiedByBlack(toSquare) && !isOccupiedByKing(toSquare))
-            {
-                moves.emplace_back( pt, atSq, toSquare );
-            }
-            break;
-        }
-        moves.emplace_back( pt, atSq, toSquare );
-        if ( isKing )
-            break;
-        i++;
-    }
-    i = 1;
-    while ( true )
-    {
-        int toSquareRow = atSq / 8 - i;
-        int toSquareCol = atSq % 8 + i;
-        int toSquare = toSquareRow * 8 + toSquareCol;
-        if ( toSquareCol > 7 || toSquareRow < 0 )
-            break;
-        if ( !isSquareEmpty(toSquare) )
-        {
-            if (isBlack && isOccupiedByWhite(toSquare) && !isOccupiedByKing(toSquare))
-            {
-                moves.emplace_back( pt, atSq, toSquare );
-            }
-            else if (!isBlack && isOccupiedByBlack(toSquare) && !isOccupiedByKing(toSquare))
-            {
-                moves.emplace_back( pt, atSq, toSquare );
-            }
-            break;
-        }
-        moves.emplace_back( pt, atSq, toSquare );
-        if ( isKing )
-            break;
-        i++;
-    }
-    return moves;
-}
-
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-vector<cmove> cboard::generateKingMoves( int color, int atSq ) const
-{
-    const cpiece::PIECE pt = color == 0 ? cpiece::PIECE::bking
-                                        : cpiece::PIECE::wking;
-    vector<cmove> moves = generateRookLikeMoves( pt, atSq );
-    vector<cmove> diagmoves = generateBishopLikeMoves( pt, atSq );
-    moves.insert( moves.end(), diagmoves.begin(), diagmoves.end() );
-    return moves;
-}
-
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-vector<cmove> cboard::generateKnightMoves( int color, int atSq ) const
-{
-    const cpiece::PIECE pt = color == 0 ? cpiece::PIECE::bknight
-                                        : cpiece::PIECE::wknight;
     vector <cmove> moves;
     int currSqPadded = toPadded( atSq );
     static vector<int> toSquares{23, 25, 14, 10, -10, -14, -25, -23};
     for (int toSquareDelta : toSquares)
     {
         int toSquarePadded = currSqPadded + toSquareDelta;
-        int toSquare = fromPadded(toSquarePadded);
-        if (toSquare == -1)
+        int toSq           = fromPadded(toSquarePadded);
+
+        if (toSq == -1)
             continue;
 
-        if ((color == 0 && isOccupiedByWhite(toSquare) && !isOccupiedByKing(toSquare)) ||
-            (color == 1 && isOccupiedByBlack(toSquare) && !isOccupiedByKing(toSquare)) ||
-            isSquareEmpty(toSquare))
-        {
-            moves.emplace_back(pt, atSq, toSquare);
-        }
+        addMove( atSq, toSq, moves );
     }
     return moves;
 }
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-void cboard::makeMove( cmove move ) noexcept
+bool cboard::isSquareAttacked( int sq ) const
 {
-    assert(_sq[move.getfromSq()].getType() == move.getPieceType());
-    //assert( _sq[move.gettoSq()].getType() == cpiece::PIECE::none );
-    _sq[move.getfromSq()] = cpiece(cpiece::PIECE::none, move.getfromSq());
-    if (move.getPieceType() == cpiece::PIECE::bpawn && move.getfromSq() / 8 == 6)
-        _sq[move.gettoSq()] = cpiece(cpiece::PIECE::bqueen, move.gettoSq());
-    else if (move.getPieceType() == cpiece::PIECE::wpawn && move.getfromSq() / 8 == 1)
-        _sq[move.gettoSq()] = cpiece(cpiece::PIECE::wqueen, move.gettoSq());
-    else
-        _sq[move.gettoSq()] = cpiece(move.getPieceType(), move.gettoSq());
+    // attacked by pawn
+    return false;
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+void cboard::makeMove( const cmove& move ) noexcept
+{
+    int fromSq = move.getfromSq();
+    int toSq   = move.gettoSq();
+
+    // target square should be empty or occupied by other side
+    assert( _sq[toSq].getType() == cpiece::none ||
+            _sq[toSq].getColor() != sideToMove() );
+
+    _sq[toSq]   = move.isPromotion() ? cpiece( move.promotedPiece() ) : _sq[fromSq];
+    _sq[fromSq] = cpiece( cpiece::none );
+
     _sideToMove ^= 1;
 }
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-void cboard::takeMove( cmove move ) noexcept
+void cboard::takeMove( const cmove& move ) noexcept
 {
-    _sq[move.gettoSq()] = cpiece( cpiece::PIECE::none, move.gettoSq() );
-    _sq[move.getfromSq()] = cpiece( move.getPieceType(), move.getfromSq() );
+    int fromSq = move.getfromSq();
+    int toSq   = move.gettoSq();
+
+    // source square MUST be empty
+    assert( _sq[fromSq].getType() == cpiece::none );
+
+    // target square MUST not be empty
+    assert( _sq[toSq].getType() != cpiece::none &&
+            _sq[toSq].getColor() != sideToMove() );
+
+    _sq[fromSq] = move.isPromotion() ? pawn( opposite( sideToMove() ) ) : _sq[toSq];
+    _sq[toSq]   = move.isCapture()   ? cpiece( move.capturedPiece() ) : cpiece( cpiece::none );
+
     _sideToMove ^= 1;
 }
 
@@ -458,11 +418,18 @@ void cboard::takeMove( cmove move ) noexcept
 // -----------------------------------------------------------------------------
 void cboard::display() const noexcept
 {
-    for ( int i = 0; i < 64; i++ )
+    auto sq = []( int r, int f )->int
     {
-        std::cout << _sq[i].toString() << " ";
-        if ( (i + 1) % 8 == 0 )
-            std::cout << "\n";
+        return static_cast<int>(r) * 8 + static_cast<int>(f);
+    };
+
+    for ( int r = static_cast<int>(BOARD_RANK::EIGHT); r >= static_cast<int>(BOARD_RANK::ONE); --r )
+    {
+        for ( int f = static_cast<int>(BOARD_FILE::A); f <= static_cast<int>(BOARD_FILE::H); ++f )
+        {
+            std::cout << _sq[sq(r, f)].toString() << " ";
+        }
+        std::cout << "\n";
     }
     std::cout << "\n";
 }
