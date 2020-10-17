@@ -308,9 +308,9 @@ private:
     vector<cmove> generateQueenMoves( int atSq ) const;
     vector<cmove> generateKingMoves( int atSq ) const;
 
-    // find out if passed square is attacked by any piece irrespective of whose
+    // find out if passed square is attacked by attacker
     // turn it is
-    bool isSquareAttacked( int sq ) const;
+    bool isSquareAttacked( const color& attacker, int sq ) const;
 
     bool isSquareEmpty( int sq ) const noexcept
     {

@@ -292,7 +292,7 @@ vector<cmove> cboard::generateKingMoves( int atSq ) const
         }
 
         int toSq = toSqRank * 8 + toSqFile;
-        if ( isSquareAttacked( toSq ) )
+        if ( isSquareAttacked( opposite( sideToMove() ), toSq ) )
             continue;
 
         auto [added, captured] = addMove( atSq, toSq, moves );
@@ -371,9 +371,118 @@ vector<cmove> cboard::generateKnightMoves( int atSq ) const
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-bool cboard::isSquareAttacked( int sq ) const
+bool cboard::isSquareAttacked( const color& attacker, int sq ) const
 {
+    int paddedSq = toPadded( sq );
+
     // attacked by pawn
+    static constexpr int pdelta[4] = { 11, -11, 13, -13 };
+    for ( int ii = 0; ii < 4; ++ii )
+    {
+        int toSq = fromPadded( paddedSq + pdelta[ii] );
+        if ( toSq == -1 || isSquareEmpty( toSq ) )
+            continue;
+        const cpiece &p = _sq[toSq];
+        if ( p.getColor() == attacker && isPawn( p ) )
+            return true;
+    }
+
+    // attacked by knight
+    static vector<int> toSquares{23, 25, 14, 10, -10, -14, -25, -23};
+    for (int toSquareDelta : toSquares)
+    {
+        int toSquarePadded = paddedSq + toSquareDelta;
+        int toSq           = fromPadded(toSquarePadded);
+
+        if ( toSq == -1 || isSquareEmpty( toSq ) )
+            continue;
+
+        const cpiece &p = _sq[toSq];
+        if ( p.getColor() == attacker && isKnight( p ) )
+            return true;
+    }
+
+    int sqRank = static_cast<int>(rank( sq ));
+    int sqFile = static_cast<int>(file( sq ));
+
+    // attacked diagonally (bishop, queen, king)
+    static constexpr int directionsd[4][2] = { { 1, 1 }, { -1, -1 }, { 1, -1 }, { -1, 1 } };
+    for ( int ii = 0; ii < 4; ++ii )
+    {
+        const int *dir = directionsd[ii];
+        int i = 1;
+        while ( true )
+        {
+            int curSqRank = sqRank + i * dir[0];
+            int curSqFile = sqFile + i * dir[1];
+            if ( curSqRank < static_cast<int>(BOARD_RANK::ONE)   ||
+                 curSqRank > static_cast<int>(BOARD_RANK::EIGHT) ||
+                 curSqFile < static_cast<int>(BOARD_FILE::A)     ||
+                 curSqFile > static_cast<int>(BOARD_FILE::H) )
+            {
+                break;
+            }
+
+            int curSq = curSqRank * 8 + curSqFile;
+            bool empty = isSquareEmpty( curSq );
+            if ( empty )
+            {
+                ++i;
+                continue;
+            }
+            else
+            {
+                const cpiece &p = _sq[curSq];
+                if ( p.getColor() != attacker )
+                    break;
+
+                if ( isBishop( p ) || isQueen( p ) || isKing( p ) )
+                    return true;
+
+                ++i;
+            }
+        }
+    }
+
+    // attacked straight (rook, queen, king)
+    static constexpr int directionss[4][2] = { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } };
+    for ( int ii = 0; ii < 4; ++ii )
+    {
+        const int *dir = directionss[ii];
+        int i = 1;
+        while ( true )
+        {
+            int curSqRank = sqRank + i * dir[0];
+            int curSqFile = sqFile + i * dir[1];
+            if ( curSqRank < static_cast<int>(BOARD_RANK::ONE)   ||
+                 curSqRank > static_cast<int>(BOARD_RANK::EIGHT) ||
+                 curSqFile < static_cast<int>(BOARD_FILE::A)     ||
+                 curSqFile > static_cast<int>(BOARD_FILE::H) )
+            {
+                break;
+            }
+
+            int curSq = curSqRank * 8 + curSqFile;
+            bool empty = isSquareEmpty( curSq );
+            if ( empty )
+            {
+                ++i;
+                continue;
+            }
+            else
+            {
+                const cpiece &p = _sq[curSq];
+                if ( p.getColor() != attacker )
+                    break;
+
+                if ( isRook( p ) || isQueen( p ) || isKing( p ) )
+                    return true;
+
+                ++i;
+            }
+        }
+    }
+
     return false;
 }
 
