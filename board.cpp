@@ -148,7 +148,6 @@ vector<cmove> cboard::generateMoves() const
     }
 
     // remove illegal moves
-    if ( isInCheck( sideToMove() ) )
     {
         cboard copy = *this;
         auto it = std::partition( moves.begin(), moves.end(),
