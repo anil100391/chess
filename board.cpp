@@ -1,3 +1,4 @@
+#include <string>
 #include <array>
 #include <iostream>
 #include <algorithm>
@@ -83,6 +84,53 @@ void cboard::setBoard( const char* fenstr )
             }
         }
     }
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+std::string cboard::toFen() const
+{
+    std::string fen;
+
+    auto sq = []( int r, int f )->int
+    {
+        return static_cast<int>(r) * 8 + static_cast<int>(f);
+    };
+
+    for ( int r = static_cast<int>(BOARD_RANK::EIGHT); r >= static_cast<int>(BOARD_RANK::ONE); --r )
+    {
+        int emptyCounter = 0;
+        for ( int f = static_cast<int>(BOARD_FILE::A); f <= static_cast<int>(BOARD_FILE::H); ++f )
+        {
+            char c = _sq[sq( r, f )].toString();
+            if ( c == '.' )
+                ++emptyCounter;
+            else
+            {
+                if ( emptyCounter != 0 )
+                {
+                    fen += std::to_string( emptyCounter );
+                    emptyCounter = 0;
+                }
+                fen += c;
+            }
+        }
+
+        if ( emptyCounter != 0 )
+        {
+            fen += std::to_string( emptyCounter );
+            emptyCounter = 0;
+        }
+        if ( r != static_cast<int>(BOARD_RANK::ONE) )
+            fen += "/";
+    }
+
+    if ( sideToMove() == light )
+        fen += " w";
+    else
+        fen += " b";
+
+    return fen;
 }
 
 // -----------------------------------------------------------------------------
@@ -512,6 +560,43 @@ bool cboard::isInCheck( const color &col ) const
 {
     int ks = kingSq( col );
     return isSquareAttacked( opposite( col ), ks );
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+bool cboard::makeMove( int fromSq, int toSq ) noexcept
+{
+    if ( !isValidSq( fromSq ) || !isValidSq( toSq ) || isSquareEmpty( fromSq ) )
+        return false;
+
+    const cpiece &p = _sq[fromSq];
+    if ( p.getColor() != sideToMove() )
+        return false;
+
+    auto moves = generateMoveforPiece( p, fromSq );
+    auto it = std::find_if( moves.begin(), moves.end(),
+                            [&fromSq, &toSq](const cmove& m)
+                            {
+                                return m.getfromSq() == fromSq && m.gettoSq() == toSq;
+                            } );
+
+    if ( it == moves.end() )
+        return false;
+
+    const cmove &move = *it;
+    // remove illegal moves
+    if ( isInCheck( sideToMove() ) )
+    {
+        makeMove( move );
+        if ( !isInCheck( opposite( sideToMove() ) ) )
+            return true;
+
+        takeMove( move );
+        return false;
+    }
+
+    makeMove( move );
+    return true;
 }
 
 // -----------------------------------------------------------------------------

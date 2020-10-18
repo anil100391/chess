@@ -267,8 +267,11 @@ public:
 
     void setBoard( const char* fenstr );
 
+    std::string toFen() const;
+
     vector<cmove> generateMoves() const;
 
+    bool makeMove( int fromSq, int toSq ) noexcept;
     void makeMove( const cmove& move ) noexcept;
     void takeMove( const cmove& move ) noexcept;
 
@@ -295,6 +298,16 @@ private:
         if ( sqRow < 2 || sqRow > 9 || sqCol < 2 || sqCol > 9 )
             return -1;
         return ((sq / 12) - 2) * 8 + ((sq % 12) - 2);
+    }
+
+    bool isValidSq( int sq ) const noexcept
+    {
+        int r = static_cast<int>(rank( sq ));
+        int f = static_cast<int>(file( sq ));
+        return r >= static_cast<int>(BOARD_RANK::ONE)   &&
+               r <= static_cast<int>(BOARD_RANK::EIGHT) &&
+               f >= static_cast<int>(BOARD_FILE::A)     &&
+               f <= static_cast<int>(BOARD_FILE::H);
     }
 
     // add a move from fromSq to toSq to moveList

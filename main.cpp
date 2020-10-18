@@ -12,8 +12,9 @@ int main(int argc, char * argv[])
 {
     cboard b;
     const char *pos="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    const char *curr_pos="rnbqkbnr/nppppppp/8/8/4K3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
-    b.setBoard( pos );
+    const char *curr_pos="rnb1kbnr/pp1ppppp/1qp5/8/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq - 2 3";
+    b.setBoard( curr_pos );
+    std::cout << b.toFen() << "\n";
     b.display();
     /*
     b.setBoard( pos );
