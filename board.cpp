@@ -564,6 +564,13 @@ bool cboard::isInCheck( const color &col ) const
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
+bool cboard::isCheckmate() const
+{
+    return isInCheck( sideToMove() ) && generateMoves().empty();
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 bool cboard::makeMove( int fromSq, int toSq ) noexcept
 {
     if ( !isValidSq( fromSq ) || !isValidSq( toSq ) || isSquareEmpty( fromSq ) )

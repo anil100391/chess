@@ -280,6 +280,8 @@ public:
 
     bool isInCheck( const color &col ) const;
 
+    bool isCheckmate() const;
+
     void display() const noexcept;
 
     const cpiece& operator[](int sq) const noexcept { return _sq[sq]; }
