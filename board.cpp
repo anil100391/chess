@@ -84,6 +84,21 @@ void cboard::setBoard( const char* fenstr )
             }
         }
     }
+    while (it!=fen.end())
+    {
+        char c = *it;
+        switch(c)
+        {
+            case 'w': _sideToMove = 1; break;
+            case 'b': _sideToMove = 0; break;
+            case 'K': _castlePerm |= whiteK; break;
+            case 'Q': _castlePerm |= whiteQ; break;
+            case 'k': _castlePerm |= blackK; break;
+            case 'q': _castlePerm |= blackQ; break;
+            default: break;
+        }
+        ++it;
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -366,6 +381,51 @@ vector<cmove> cboard::generateKingMoves( int atSq ) const
         if ( !added || !captured )
             continue;
     }
+
+    vector<cmove> castleMoves = generateCastleMoves(atSq);
+    moves.insert(moves.end(), castleMoves.begin(), castleMoves.end());
+    return moves;
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+vector<cmove> cboard::generateCastleMoves(int atSq) const
+{
+    assert(isKing(_sq[atSq]));
+    int canBlackCastle = (blackQ | blackK);
+    int canWhiteCastle = (whiteQ | whiteK);
+
+    int atSqRank = static_cast<int>(rank(atSq));
+    int atSqFile = static_cast<int>(file(atSq));
+    vector<cmove> moves;
+    color col = _sq[atSq].getColor();
+    if ((col == dark && !(canBlackCastle & _castlePerm)) ||
+        (col == light && !(canWhiteCastle & _castlePerm)) ||
+        isInCheck(col))
+    {
+        return moves;
+    }
+
+    bool kingSideCastle = isSquareEmpty(atSq + 1)                       &&
+                          isSquareEmpty(atSq + 2)                       &&
+                          !isSquareAttacked(opposite(col), atSq + 1)    &&
+                          !isSquareAttacked(opposite(col), atSq + 2);
+    if (kingSideCastle)
+    {
+        moves.emplace_back(atSq, atSq + 2, cpiece::none, cpiece::none, true);
+    }
+
+    bool queenSideCastle = isSquareEmpty(atSq - 1)                      &&
+                           isSquareEmpty(atSq - 2)                      &&
+                           isSquareEmpty(atSq - 3)                      &&
+                           !isSquareAttacked(opposite(col), atSq - 1)   &&
+                           !isSquareAttacked(opposite(col), atSq - 2)   &&
+                           !isSquareAttacked(opposite(col), atSq - 3);
+    if (queenSideCastle)
+    {
+        moves.emplace_back(atSq, atSq - 2, cpiece::none, cpiece::none, true);
+    }
+
     return moves;
 }
 
@@ -608,6 +668,45 @@ bool cboard::makeMove( int fromSq, int toSq ) noexcept
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
+void cboard::updateCastlePermission(const cmove &move)
+{
+    int fromSq = move.getfromSq();
+    int toSq = move.gettoSq();
+
+    if (isKing(_sq[fromSq]))
+    {
+        if (_sq[fromSq].getColor() == light)
+        {
+            _castlePerm &= (blackK | blackQ);
+        }
+        else
+        {
+            _castlePerm &= (whiteK | whiteQ);
+        }
+    }
+    if (isRook(_sq[fromSq]))
+    {
+        if (_sq[fromSq].getColor() == light && fromSq == 0)
+        {
+            _castlePerm &= (whiteK | blackK | blackQ);
+        }
+        else if (_sq[fromSq].getColor() == light && fromSq == 7)
+        {
+            _castlePerm &= (whiteQ | blackK | blackQ);
+        }
+        else if (_sq[fromSq].getColor() == dark && fromSq == 56)
+        {
+            _castlePerm &= (blackK | whiteK | whiteQ);
+        }
+        else if (_sq[fromSq].getColor() == light && fromSq == 63)
+        {
+            _castlePerm &= (blackQ | whiteK | whiteQ);
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 void cboard::makeMove( const cmove& move ) noexcept
 {
     int fromSq = move.getfromSq();
@@ -617,8 +716,25 @@ void cboard::makeMove( const cmove& move ) noexcept
     assert( _sq[toSq].getType() == cpiece::none ||
             _sq[toSq].getColor() != sideToMove() );
 
+    updateCastlePermission(move);
+
     _sq[toSq]   = move.isPromotion() ? cpiece( move.promotedPiece() ) : _sq[fromSq];
     _sq[fromSq] = cpiece( cpiece::none );
+
+    if ( move.isCastle() )
+    {
+        bool kingSide = (toSq - fromSq > 0);
+        if ( kingSide )
+        {
+            _sq[toSq+1]= cpiece(cpiece::none);
+            _sq[toSq-1] = (sideToMove() == dark) ? cpiece(cpiece::brook) : cpiece(cpiece::wrook);
+        }
+        else
+        {
+            _sq[toSq-2]= cpiece(cpiece::none);
+            _sq[toSq+1] = (sideToMove() == dark) ? cpiece(cpiece::brook) : cpiece(cpiece::wrook);
+        }
+    }
 
     _sideToMove ^= 1;
 }
@@ -639,6 +755,23 @@ void cboard::takeMove( const cmove& move ) noexcept
 
     _sq[fromSq] = move.isPromotion() ? pawn( opposite( sideToMove() ) ) : _sq[toSq];
     _sq[toSq]   = move.isCapture()   ? cpiece( move.capturedPiece() ) : cpiece( cpiece::none );
+
+    if ( move.isCastle() )
+    {
+        bool kingSide = (toSq - fromSq > 0);
+        if ( kingSide )
+        {
+            _sq[toSq-1]= cpiece(cpiece::none);
+            _sq[toSq+1] = (sideToMove() == light) ? cpiece(cpiece::brook) : cpiece(cpiece::wrook);
+            _castlePerm |= ((sideToMove() == light) ? blackK : whiteK);
+        }
+        else
+        {
+            _sq[toSq+1]= cpiece(cpiece::none);
+            _sq[toSq-2] = (sideToMove() == light) ? cpiece(cpiece::brook) : cpiece(cpiece::wrook);
+            _castlePerm |= ((sideToMove() == light) ? blackQ : whiteQ);
+        }
+    }
 
     _sideToMove ^= 1;
 }

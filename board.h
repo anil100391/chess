@@ -251,6 +251,10 @@ class cboard
 {
 
 public:
+    enum CASTLE_PERM
+    {
+        whiteK=1, blackK=2, whiteQ=4, blackQ=8
+    };
 
     cboard() : _sq(64)
     {}
@@ -317,7 +321,7 @@ private:
     // returns a tuple of (true, false) if a move was added and it was not a caputre move
     // returns a tuple of (false, false) if no move was added
     std::pair<bool, bool> addMove( int fromSq, int toSq, vector<cmove> &list ) const;
-
+    void updateCastlePermission(const cmove &move);
     vector<cmove> generateMoveforPiece( const cpiece &p, int fromSq ) const;
     vector<cmove> generatePawnMoves( int fromSq ) const;
     vector<cmove> generateRookMoves( int atSq ) const;
@@ -327,6 +331,7 @@ private:
     vector<cmove> generateBishopLikeMoves( int atSq ) const;
     vector<cmove> generateQueenMoves( int atSq ) const;
     vector<cmove> generateKingMoves( int atSq ) const;
+    vector<cmove> generateCastleMoves( int atSq ) const;
 
     bool isSquareEmpty( int sq ) const noexcept
     {
@@ -367,6 +372,7 @@ private:
 
     int            _sideToMove = 1;
     int            _empassantSq = -1;
+    int            _castlePerm = 0;
 };
 
 #endif // _BOARD_H_
