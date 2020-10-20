@@ -268,6 +268,10 @@ public:
     }
 
     color sideToMove() const noexcept { return _sideToMove == 0 ? dark : light; }
+    int empassantSq() const noexcept
+    {
+        return _empassantSq;
+    }
 
     void setBoard( const char* fenstr );
 
@@ -322,6 +326,7 @@ private:
     // returns a tuple of (false, false) if no move was added
     std::pair<bool, bool> addMove( int fromSq, int toSq, vector<cmove> &list ) const;
     void updateCastlePermission(const cmove &move);
+    void updateEmpassantSq(const cmove &move);
     vector<cmove> generateMoveforPiece( const cpiece &p, int fromSq ) const;
     vector<cmove> generatePawnMoves( int fromSq ) const;
     vector<cmove> generateRookMoves( int atSq ) const;

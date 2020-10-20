@@ -251,6 +251,8 @@ vector<cmove> cboard::generatePawnMoves( int atSq ) const
         toSq = fromSq + delta * dir;
         if ( isOccupiedBy( opposite( col ), toSq ) && !isOccupiedByKing( toSq ) )
             moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), isPromotion( toSq ) ? queenType( col ) : nopieceType() );
+        if (empassantSq() == toSq && isSquareEmpty(toSq))
+            moves.emplace_back(fromSq, toSq, col == light ? cpiece::bpawn : cpiece::wpawn, nopieceType(), false, true);
     }
     else if ( file( atSq ) == BOARD_FILE::H )
     {
@@ -258,16 +260,22 @@ vector<cmove> cboard::generatePawnMoves( int atSq ) const
         toSq = fromSq + delta * dir;
         if ( isOccupiedBy( opposite( col ), toSq ) && !isOccupiedByKing( toSq ) )
             moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), isPromotion( toSq ) ? queenType( col ) : nopieceType() );
+        if (empassantSq() == toSq && isSquareEmpty(toSq))
+            moves.emplace_back(fromSq, toSq, col == light ? cpiece::bpawn : cpiece::wpawn, nopieceType(), false, true);
     }
     else
     {
         toSq = fromSq + 9 * dir;
         if ( isOccupiedBy( opposite( col ), toSq ) && !isOccupiedByKing( toSq ) )
             moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), isPromotion( toSq ) ? queenType( col ) : nopieceType() );
+        if (empassantSq() == toSq && isSquareEmpty(toSq))
+            moves.emplace_back(fromSq, toSq, col == light ? cpiece::bpawn : cpiece::wpawn, nopieceType(), false, true);
 
         toSq = fromSq + 7 * dir;
         if ( isOccupiedBy( opposite( col ), toSq ) && !isOccupiedByKing( toSq ) )
             moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), isPromotion( toSq ) ? queenType( col ) : nopieceType() );
+        if (empassantSq() == toSq && isSquareEmpty(toSq))
+            moves.emplace_back(fromSq, toSq, col == light ? cpiece::bpawn : cpiece::wpawn, nopieceType(), false, true);
     }
 
     return moves;
@@ -668,6 +676,25 @@ bool cboard::makeMove( int fromSq, int toSq ) noexcept
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
+void cboard::updateEmpassantSq(const cmove &move)
+{
+    int fromSq = move.getfromSq();
+    int toSq = move.gettoSq();
+
+    if (isPawn(_sq[fromSq]))
+    {
+        int delta = toSq - fromSq;
+        if (std::abs(delta) == 16)
+        {
+            _empassantSq = delta > 0 ? fromSq + 8 : fromSq - 8;
+            return;
+        }
+    }
+    _empassantSq = -1;
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 void cboard::updateCastlePermission(const cmove &move)
 {
     int fromSq = move.getfromSq();
@@ -684,7 +711,7 @@ void cboard::updateCastlePermission(const cmove &move)
             _castlePerm &= (whiteK | whiteQ);
         }
     }
-    if (isRook(_sq[fromSq]))
+    else if (isRook(_sq[fromSq]))
     {
         if (_sq[fromSq].getColor() == light && fromSq == 0)
         {
@@ -717,6 +744,7 @@ void cboard::makeMove( const cmove& move ) noexcept
             _sq[toSq].getColor() != sideToMove() );
 
     updateCastlePermission(move);
+    updateEmpassantSq(move);
 
     _sq[toSq]   = move.isPromotion() ? cpiece( move.promotedPiece() ) : _sq[fromSq];
     _sq[fromSq] = cpiece( cpiece::none );
@@ -734,6 +762,12 @@ void cboard::makeMove( const cmove& move ) noexcept
             _sq[toSq-2]= cpiece(cpiece::none);
             _sq[toSq+1] = (sideToMove() == dark) ? cpiece(cpiece::brook) : cpiece(cpiece::wrook);
         }
+    }
+
+    if (move.isEmpassant())
+    {
+        int dir = (toSq - fromSq > 0) ? 1 : -1;
+        _sq[toSq + 8 * dir] = cpiece(cpiece::none);
     }
 
     _sideToMove ^= 1;
@@ -754,7 +788,7 @@ void cboard::takeMove( const cmove& move ) noexcept
             _sq[toSq].getColor() != sideToMove() );
 
     _sq[fromSq] = move.isPromotion() ? pawn( opposite( sideToMove() ) ) : _sq[toSq];
-    _sq[toSq]   = move.isCapture()   ? cpiece( move.capturedPiece() ) : cpiece( cpiece::none );
+    _sq[toSq]   = move.isCapture() && !move.isEmpassant() ? cpiece( move.capturedPiece() ) : cpiece( cpiece::none );
 
     if ( move.isCastle() )
     {
@@ -771,6 +805,13 @@ void cboard::takeMove( const cmove& move ) noexcept
             _sq[toSq-2] = (sideToMove() == light) ? cpiece(cpiece::brook) : cpiece(cpiece::wrook);
             _castlePerm |= ((sideToMove() == light) ? blackQ : whiteQ);
         }
+    }
+
+    if (move.isEmpassant())
+    {
+        int dir = (toSq - fromSq > 0) ? 1 : -1;
+        _sq[toSq + 8 * dir] = pawn(sideToMove());
+        _empassantSq = toSq;
     }
 
     _sideToMove ^= 1;
