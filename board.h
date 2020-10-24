@@ -1,6 +1,7 @@
 #ifndef _BOARD_H_
 #define _BOARD_H_
 
+#include <array>
 #include <vector>
 #include <cassert>
 
@@ -247,6 +248,23 @@ private:
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
+class cboard;
+
+// -----------------------------------------------------------------------------
+// G A M E  H I S T O R Y
+// -----------------------------------------------------------------------------
+struct  cgamehistorydata
+{
+    std::string toString() const;
+
+    vector<cpiece> _pieces;              // piece distribution on board before move was played
+    cmove          _movePlayed = {0, 0}; // move that was played at board
+    int            _castlePerm = 0;      // castle permissions before move was played
+    int            _empassantSq = -1;    // empassant square available on board before move was played
+};
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 class cboard
 {
 
@@ -276,7 +294,6 @@ public:
     void setBoard( const char* fenstr );
 
     std::string toFen() const;
-
     vector<cmove> generateMoves() const;
 
     bool makeMove( int fromSq, int toSq ) noexcept;
@@ -293,6 +310,9 @@ public:
     void display() const noexcept;
 
     const cpiece& operator[](int sq) const noexcept { return _sq[sq]; }
+
+    void goToPly( int ply );
+    const cgamehistorydata& getBoardStateAt( int ply ) const { return _history[ply]; }
 
 private:
 
@@ -373,11 +393,19 @@ private:
         return -1;
     }
 
+    void addHistoryState( const cmove &moveAboutToMake );
+
     vector<cpiece> _sq;
 
     int            _sideToMove = 1;
     int            _empassantSq = -1;
     int            _castlePerm = 0;
+
+    // history
+    static constexpr int MAX_PLY = 1024;
+    std::array<cgamehistorydata, MAX_PLY> _history;
+
+    int             _currentPly = -1;
 };
 
 #endif // _BOARD_H_

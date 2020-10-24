@@ -735,6 +735,9 @@ void cboard::updateCastlePermission(const cmove &move)
 // -----------------------------------------------------------------------------
 void cboard::makeMove( const cmove& move ) noexcept
 {
+    ++_currentPly;
+    addHistoryState( move );
+
     int fromSq = move.getfromSq();
     int toSq   = move.gettoSq();
 
@@ -776,6 +779,8 @@ void cboard::makeMove( const cmove& move ) noexcept
 // -----------------------------------------------------------------------------
 void cboard::takeMove( const cmove& move ) noexcept
 {
+    --_currentPly;
+
     int fromSq = move.getfromSq();
     int toSq   = move.gettoSq();
 
@@ -834,4 +839,57 @@ void cboard::display() const noexcept
         std::cout << "\n";
     }
     std::cout << "\n";
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+void cboard::goToPly( int ply )
+{
+    _currentPly  = ply;
+    _sideToMove  = ply % 2 == 0 ? 1 : 0;
+    _sq          = _history[ply]._pieces;
+    _castlePerm  = _history[_currentPly]._castlePerm;
+    _empassantSq = _history[_currentPly]._empassantSq;
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+void cboard::addHistoryState( const cmove &moveAboutToMake )
+{
+    _history[_currentPly]._pieces       = _sq;
+    _history[_currentPly]._castlePerm   = _castlePerm;
+    _history[_currentPly]._empassantSq  = _empassantSq;
+    _history[_currentPly]._movePlayed   = moveAboutToMake;
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+std::string cgamehistorydata::toString() const
+{
+    int fromSq = _movePlayed.getfromSq();
+    int toSq   = _movePlayed.gettoSq();
+
+    std::string str;
+    if ( !isPawn( _pieces[fromSq] )  )
+    {
+        str += _pieces[fromSq].toString();
+    }
+
+    if ( _movePlayed.isCapture() )
+    {
+        if ( isPawn( _pieces[fromSq] ) )
+        {
+            unsigned char f = 'a' + static_cast<unsigned char>(file( fromSq ));
+            str += f;
+        }
+
+        str += "x";
+    }
+
+    unsigned char r = '1' + static_cast<unsigned char>(rank( toSq ));
+    unsigned char f = 'a' + static_cast<unsigned char>(file( toSq ));
+
+    str += f;
+    str += r;
+    return str;
 }
