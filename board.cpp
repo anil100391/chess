@@ -769,7 +769,7 @@ void cboard::makeMove( const cmove& move ) noexcept
     if (move.isEmpassant())
     {
         int dir = (toSq - fromSq > 0) ? 1 : -1;
-        _sq[toSq + 8 * dir] = cpiece(cpiece::none);
+        _sq[toSq - 8 * dir] = cpiece(cpiece::none);
     }
 
     _sideToMove ^= 1;
