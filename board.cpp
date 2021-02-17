@@ -32,6 +32,10 @@ char cpiece::toString() const noexcept
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
+czobrist cboard::_posHasher;
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 void cboard::setBoard( const char* fenstr )
 {
     // sq 0 corresponds to A1 and sq 64 corresponds to H8
@@ -170,7 +174,7 @@ vector<cmove> cboard::generateMoves() const
                                   {
                                       copy.makeMove( m );
                                       bool ret = !copy.isInCheck( opposite( copy.sideToMove() ) );
-                                      copy.takeMove( m );
+                                      copy.takeMove();
                                       return ret;
                                   } );
         if ( it != moves.end() )
@@ -665,7 +669,7 @@ bool cboard::makeMove( int fromSq, int toSq ) noexcept
         if ( !isInCheck( opposite( sideToMove() ) ) )
             return true;
 
-        takeMove( move );
+        takeMove();
         return false;
     }
 
@@ -777,48 +781,41 @@ void cboard::makeMove( const cmove& move ) noexcept
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-void cboard::takeMove( const cmove& move ) noexcept
+void cboard::takeMove() noexcept
 {
-    --_currentPly;
-
-    int fromSq = move.getfromSq();
-    int toSq   = move.gettoSq();
-
-    // source square MUST be empty
-    assert( _sq[fromSq].getType() == cpiece::none );
-
-    // target square MUST not be empty
-    assert( _sq[toSq].getType() != cpiece::none &&
-            _sq[toSq].getColor() != sideToMove() );
-
-    _sq[fromSq] = move.isPromotion() ? pawn( opposite( sideToMove() ) ) : _sq[toSq];
-    _sq[toSq]   = move.isCapture() && !move.isEmpassant() ? cpiece( move.capturedPiece() ) : cpiece( cpiece::none );
-
-    if ( move.isCastle() )
-    {
-        bool kingSide = (toSq - fromSq > 0);
-        if ( kingSide )
-        {
-            _sq[toSq-1]= cpiece(cpiece::none);
-            _sq[toSq+1] = (sideToMove() == light) ? cpiece(cpiece::brook) : cpiece(cpiece::wrook);
-            _castlePerm |= ((sideToMove() == light) ? blackK : whiteK);
-        }
-        else
-        {
-            _sq[toSq+1]= cpiece(cpiece::none);
-            _sq[toSq-2] = (sideToMove() == light) ? cpiece(cpiece::brook) : cpiece(cpiece::wrook);
-            _castlePerm |= ((sideToMove() == light) ? blackQ : whiteQ);
-        }
-    }
-
-    if (move.isEmpassant())
-    {
-        int dir = (toSq - fromSq > 0) ? 1 : -1;
-        _sq[toSq + 8 * dir] = pawn(sideToMove());
-        _empassantSq = toSq;
-    }
+    _sq               = _history[_currentPly]._pieces;
+    _castlePerm       = _history[_currentPly]._castlePerm;
+    _empassantSq      = _history[_currentPly]._empassantSq;
 
     _sideToMove ^= 1;
+
+    --_currentPly;
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+uint64_t cboard::hash() const
+{
+    uint64_t key = 0;
+
+    for ( int ii = 0; ii < 64; ++ii )
+    {
+        const auto& p = _sq[ii];
+        if ( p.getType() == cpiece::none )
+            continue;
+
+        key ^= _posHasher._pieceKeys[p.getType()][ii];
+    }
+
+    if ( _empassantSq != -1 )
+        key ^= _posHasher._pieceKeys[cpiece::none][_empassantSq];
+
+    if ( sideToMove() == light )
+        key ^= _posHasher._sideKey;
+
+    key ^= _posHasher._castleKeys[_castlePerm];
+
+    return key;
 }
 
 // -----------------------------------------------------------------------------
@@ -914,3 +911,4 @@ std::string cgamehistorydata::toString() const
     str += r;
     return str;
 }
+

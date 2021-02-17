@@ -5,6 +5,8 @@
 #include <vector>
 #include <cassert>
 
+#include "zobristkeys.h"
+
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 using std::vector;
@@ -300,7 +302,7 @@ public:
 
     bool makeMove( int fromSq, int toSq ) noexcept;
     void makeMove( const cmove& move ) noexcept;
-    void takeMove( const cmove& move ) noexcept;
+    void takeMove() noexcept;
 
     // find out if passed square is attacked by attacker
     bool isSquareAttacked( const color& attacker, int sq ) const;
@@ -315,6 +317,8 @@ public:
 
     void goToPly( int ply );
     const cgamehistorydata& getBoardStateAt( int ply ) const { return _history[ply]; }
+
+    uint64_t hash() const;
 
 private:
 
@@ -399,7 +403,6 @@ private:
 
     vector<cpiece> _sq;
 
-public:
     int            _sideToMove = 1;
     int            _empassantSq = -1;
     int            _castlePerm = 0;
@@ -409,6 +412,8 @@ public:
     std::array<cgamehistorydata, MAX_PLY> _history;
 
     int             _currentPly = -1;
+
+    static czobrist _posHasher;
 };
 
 #endif // _BOARD_H_

@@ -62,6 +62,7 @@ uint64_t Perft( cboard &b, unsigned int depth, PerftResult &result )
         if ( move.isEmpassant() )
             nd.enpassant += 1;
 
+        uint64_t beforeKey = b.hash();
         b.makeMove( move );
         if ( b.isInCheck( b.sideToMove() ) )
         {
@@ -70,7 +71,9 @@ uint64_t Perft( cboard &b, unsigned int depth, PerftResult &result )
             nd.checks += 1;
         }
         nodes += Perft( b, depth - 1, result );
-        b.takeMove( move );
+        b.takeMove();
+        uint64_t afterKey = b.hash();
+        assert(beforeKey == afterKey);
     }
 
     return nodes;
