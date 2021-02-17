@@ -231,6 +231,8 @@ public:
         return static_cast<cpiece::TYPE>((_movedata & promMask) >> 16);
     }
 
+    std::string toString() const;
+
 private:
 
     //                                             ep c  prom capt to     from
@@ -397,6 +399,7 @@ private:
 
     vector<cpiece> _sq;
 
+public:
     int            _sideToMove = 1;
     int            _empassantSq = -1;
     int            _castlePerm = 0;

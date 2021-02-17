@@ -426,8 +426,7 @@ vector<cmove> cboard::generateCastleMoves(int atSq) const
                            isSquareEmpty(atSq - 2)                      &&
                            isSquareEmpty(atSq - 3)                      &&
                            !isSquareAttacked(opposite(col), atSq - 1)   &&
-                           !isSquareAttacked(opposite(col), atSq - 2)   &&
-                           !isSquareAttacked(opposite(col), atSq - 3);
+                           !isSquareAttacked(opposite(col), atSq - 2);
     if (queenSideCastle)
     {
         moves.emplace_back(atSq, atSq - 2, cpiece::none, cpiece::none, true);
@@ -860,6 +859,27 @@ void cboard::addHistoryState( const cmove &moveAboutToMake )
     _history[_currentPly]._castlePerm   = _castlePerm;
     _history[_currentPly]._empassantSq  = _empassantSq;
     _history[_currentPly]._movePlayed   = moveAboutToMake;
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+std::string cmove::toString() const
+{
+    int fromSq = getfromSq();
+    int toSq   = gettoSq();
+
+    std::string str;
+    unsigned char fr = '1' + static_cast<unsigned char>(rank( fromSq ));
+    unsigned char ff = 'a' + static_cast<unsigned char>(file( fromSq ));
+    str += ff;
+    str += fr;
+
+    unsigned char tr = '1' + static_cast<unsigned char>(rank( toSq ));
+    unsigned char tf = 'a' + static_cast<unsigned char>(file( toSq ));
+
+    str += tf;
+    str += tr;
+    return str;
 }
 
 // -----------------------------------------------------------------------------
