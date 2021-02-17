@@ -509,10 +509,11 @@ bool cboard::isSquareAttacked( const color& attacker, int sq ) const
     int paddedSq = toPadded( sq );
 
     // attacked by pawn
-    static constexpr int pdelta[4] = { 11, -11, 13, -13 };
-    for ( int ii = 0; ii < 4; ++ii )
+    int pawnMoveDir = (attacker == light) ? 1 : -1;
+    static constexpr int pdelta[2] = { 11, 13 };
+    for ( int ii = 0; ii < 2; ++ii )
     {
-        int toSq = fromPadded( paddedSq + pdelta[ii] );
+        int toSq = fromPadded( paddedSq - pawnMoveDir * pdelta[ii] );
         if ( toSq == -1 || isSquareEmpty( toSq ) )
             continue;
         const cpiece &p = _sq[toSq];
