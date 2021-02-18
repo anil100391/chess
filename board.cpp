@@ -38,6 +38,10 @@ czobrist cboard::_posHasher;
 // -----------------------------------------------------------------------------
 void cboard::setBoard( const char* fenstr )
 {
+    // reset
+    _castlePerm  = 0;
+    _empassantSq = -1;
+
     // sq 0 corresponds to A1 and sq 64 corresponds to H8
     string fen( fenstr );
 
@@ -148,6 +152,15 @@ std::string cboard::toFen() const
         fen += " w";
     else
         fen += " b";
+
+    if ( _castlePerm )
+    {
+        fen += " ";
+        if (_castlePerm & whiteK) fen += 'K';
+        if (_castlePerm & whiteQ) fen += 'Q';
+        if (_castlePerm & blackK) fen += 'k';
+        if (_castlePerm & blackQ) fen += 'q';
+    }
 
     return fen;
 }
