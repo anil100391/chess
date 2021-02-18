@@ -9,6 +9,29 @@ using namespace std;
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
+std::vector<std::string> parseCommand(const std::string &cmd)
+{
+    std::vector<std::string> cmdArgs;
+    if ( cmd.empty() )
+    {
+        return cmdArgs;
+    }
+
+    auto it = std::find(cmd.begin(), cmd.end(), ' ');
+    if ( it == cmd.end())
+    {
+        cmdArgs.push_back(cmd);
+        return cmdArgs;
+    }
+
+    size_t argStartPos = it-cmd.begin();
+    cmdArgs.push_back(cmd.substr(0, argStartPos));
+    cmdArgs.push_back(cmd.substr(argStartPos + 1));
+    return cmdArgs;
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 int main(int argc, char * argv[])
 {
     cboard b;
@@ -23,60 +46,39 @@ int main(int argc, char * argv[])
     b.setBoard( positions[0] );
     std::cout << b.toFen() << "\n";
     b.display();
-    /*
-    auto moves = b.generateMoves();
-    for ( const auto& move : moves )
-    {
-        if ( move.toString() == "g2g4" )
-        {
-            b.makeMove(move);
-            std::cout << "generating moves\n";
-            b.display();
-            auto newmoves = b.generateMoves();
-            std::cout << "done generating moves\n";
-            b.display();
-            std::cout << "num moves: " << newmoves.size() << std::endl;
-            for ( const auto& nm : newmoves )
-            {
-                std::cout << nm.toString() << std::endl;
-            }
-            break;
-        }
-    }
-
-    return 0;
-    */
-    /*
-    for ( const auto& move : moves )
-    {
-        cboard copy = b;
-        copy.makeMove(move);
-        PerftResult res;
-        uint64_t perftNodes = Perft( copy, 1, res );
-        std::cout << move.toString() << ": " << perftNodes << std::endl;
-        copy.takeMove(move);
-    }
-
-    return 0;
-    */
 
     std::string command;
     std::string commandArg;
     while ( true )
     {
-        std::cin >> command >> commandArg; // e.g. move e2e4 OR perft 2
+        std::getline(std::cin, command);
+        auto args = parseCommand(command);
+
+        if (args.empty())
+            continue;
+
+        command = args[0];
+        if (args.size() > 1)
+            commandArg = args[1];
+
         if ( command == "move" )
         {
             auto moves = b.generateMoves();
-            for ( const auto& move : moves )
+            auto it = std::find_if(moves.begin(), moves.end(),
+                                   [&commandArg](const cmove& m)
+                                   {
+                                       return (m.toString() == commandArg);
+                                   });
+
+            const cmove& move = *it;
+            if ( it != moves.end() )
             {
-                std::cout << move.toString() << std::endl;
-                if ( move.toString() == commandArg )
-                {
-                    b.makeMove(move);
-                    b.display();
-                    break;
-                }
+                b.makeMove(move);
+                b.display();
+            }
+            else
+            {
+                std::cout << "illegal move\n";
             }
         }
         else if ( command == "perft" )
@@ -90,6 +92,15 @@ int main(int argc, char * argv[])
             std::cout << "perft enpassant: " << res.nd[1].enpassant << std::endl;
             std::cout << "perft checks: " << res.nd[1].checks << std::endl;
             std::cout << "perft checkmates: " << res.nd[1].checkmate << std::endl;
+        }
+        else if ( command == "fen" )
+        {
+            b.setBoard(commandArg.c_str());
+            b.display();
+        }
+        else if (command == "quit" || command == "exit")
+        {
+            return 0;
         }
     }
 
