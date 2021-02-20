@@ -81,6 +81,14 @@ int main(int argc, char * argv[])
                 std::cout << "illegal move\n";
             }
         }
+        if ( command == "movelist" )
+        {
+            auto moves = b.generateMoves();
+            for (const auto& move : moves)
+            {
+                std::cout << move.toString() << "\n";
+            }
+        }
         else if ( command == "perft" )
         {
             int depth = std::stoi(commandArg);

@@ -41,6 +41,7 @@ void cboard::setBoard( const char* fenstr )
     // reset
     _castlePerm  = 0;
     _empassantSq = -1;
+    _currentPly  = -1;
 
     // sq 0 corresponds to A1 and sq 64 corresponds to H8
     string fen( fenstr );
@@ -248,7 +249,15 @@ vector<cmove> cboard::generatePawnMoves( int atSq ) const
     int toSq   = fromSq + 8 * dir;
     if ( isSquareEmpty( toSq ) )
     {
-        moves.emplace_back( fromSq, toSq, nopieceType(), isPromotion( toSq ) ? queenType( col ) : nopieceType() );
+        if ( !isPromotion( toSq ) )
+            moves.emplace_back( fromSq, toSq, nopieceType(), nopieceType() );
+        else
+        {
+            moves.emplace_back( fromSq, toSq, nopieceType(), queenType ( col ) );
+            moves.emplace_back( fromSq, toSq, nopieceType(), rookType  ( col ) );
+            moves.emplace_back( fromSq, toSq, nopieceType(), bishopType( col ) );
+            moves.emplace_back( fromSq, toSq, nopieceType(), knightType( col ) );
+        }
 
         bool firstMove = (col == light) ? rank( atSq ) == BOARD_RANK::TWO
                                         : rank( atSq ) == BOARD_RANK::SEVEN;
@@ -266,7 +275,17 @@ vector<cmove> cboard::generatePawnMoves( int atSq ) const
         int delta = col == light ? 9 : 7;
         toSq = fromSq + delta * dir;
         if ( isOccupiedBy( opposite( col ), toSq ) && !isOccupiedByKing( toSq ) )
-            moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), isPromotion( toSq ) ? queenType( col ) : nopieceType() );
+        {
+            if ( !isPromotion( toSq ) )
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), nopieceType() );
+            else
+            {
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), queenType ( col ) );
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), rookType  ( col ) );
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), bishopType( col ) );
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), knightType( col ) );
+            }
+        }
         if (empassantSq() == toSq && isSquareEmpty(toSq))
             moves.emplace_back(fromSq, toSq, col == light ? cpiece::bpawn : cpiece::wpawn, nopieceType(), false, true);
     }
@@ -275,7 +294,17 @@ vector<cmove> cboard::generatePawnMoves( int atSq ) const
         int delta = col == light ? 7 : 9;
         toSq = fromSq + delta * dir;
         if ( isOccupiedBy( opposite( col ), toSq ) && !isOccupiedByKing( toSq ) )
-            moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), isPromotion( toSq ) ? queenType( col ) : nopieceType() );
+        {
+            if ( !isPromotion( toSq ) )
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), nopieceType() );
+            else
+            {
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), queenType ( col ) );
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), rookType  ( col ) );
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), bishopType( col ) );
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), knightType( col ) );
+            }
+        }
         if (empassantSq() == toSq && isSquareEmpty(toSq))
             moves.emplace_back(fromSq, toSq, col == light ? cpiece::bpawn : cpiece::wpawn, nopieceType(), false, true);
     }
@@ -283,13 +312,33 @@ vector<cmove> cboard::generatePawnMoves( int atSq ) const
     {
         toSq = fromSq + 9 * dir;
         if ( isOccupiedBy( opposite( col ), toSq ) && !isOccupiedByKing( toSq ) )
-            moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), isPromotion( toSq ) ? queenType( col ) : nopieceType() );
+        {
+            if ( !isPromotion( toSq ) )
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), nopieceType() );
+            else
+            {
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), queenType ( col ) );
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), rookType  ( col ) );
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), bishopType( col ) );
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), knightType( col ) );
+            }
+        }
         if (empassantSq() == toSq && isSquareEmpty(toSq))
             moves.emplace_back(fromSq, toSq, col == light ? cpiece::bpawn : cpiece::wpawn, nopieceType(), false, true);
 
         toSq = fromSq + 7 * dir;
         if ( isOccupiedBy( opposite( col ), toSq ) && !isOccupiedByKing( toSq ) )
-            moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), isPromotion( toSq ) ? queenType( col ) : nopieceType() );
+        {
+            if ( !isPromotion( toSq ) )
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), nopieceType() );
+            else
+            {
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), queenType ( col ) );
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), rookType  ( col ) );
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), bishopType( col ) );
+                moves.emplace_back( fromSq, toSq, _sq[toSq].getType(), knightType( col ) );
+            }
+        }
         if (empassantSq() == toSq && isSquareEmpty(toSq))
             moves.emplace_back(fromSq, toSq, col == light ? cpiece::bpawn : cpiece::wpawn, nopieceType(), false, true);
     }
