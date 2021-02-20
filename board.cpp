@@ -479,7 +479,9 @@ vector<cmove> cboard::generateCastleMoves(int atSq) const
         return moves;
     }
 
-    bool kingSideCastle = isSquareEmpty(atSq + 1)                       &&
+    bool kingSideCastle = ( (col == dark  && _castlePerm & blackK) ||
+                            (col == light && _castlePerm & whiteK) )    &&
+                          isSquareEmpty(atSq + 1)                       &&
                           isSquareEmpty(atSq + 2)                       &&
                           !isSquareAttacked(opposite(col), atSq + 1)    &&
                           !isSquareAttacked(opposite(col), atSq + 2);
@@ -488,7 +490,9 @@ vector<cmove> cboard::generateCastleMoves(int atSq) const
         moves.emplace_back(atSq, atSq + 2, cpiece::none, cpiece::none, true);
     }
 
-    bool queenSideCastle = isSquareEmpty(atSq - 1)                      &&
+    bool queenSideCastle = ( (col == dark  && _castlePerm & blackQ) ||
+                             (col == light && _castlePerm & whiteQ) )   &&
+                           isSquareEmpty(atSq - 1)                      &&
                            isSquareEmpty(atSq - 2)                      &&
                            isSquareEmpty(atSq - 3)                      &&
                            !isSquareAttacked(opposite(col), atSq - 1)   &&
@@ -793,6 +797,24 @@ void cboard::updateCastlePermission(const cmove &move)
         else if (_sq[fromSq].getColor() == light && fromSq == 63)
         {
             _castlePerm &= (blackQ | whiteK | whiteQ);
+        }
+    }
+    else if (move.isCapture() && isRook(move.capturedPiece()))
+    {
+        int toSq = move.gettoSq();
+        if (move.capturedPiece() == cpiece::brook) 
+        {
+            if (toSq == 56)
+                _castlePerm &= (whiteK | whiteQ | blackK);
+            else if (toSq == 63)
+                _castlePerm &= (whiteK | whiteQ | blackQ);
+        }
+        else if (move.capturedPiece() == cpiece::wrook) 
+        {
+            if (toSq == 0)
+                _castlePerm &= (blackK | blackQ | whiteK);
+            else if (toSq == 7)
+                _castlePerm &= (blackK | blackQ | whiteQ);
         }
     }
 }
