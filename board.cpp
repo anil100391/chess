@@ -790,7 +790,7 @@ void cboard::updateCastlePermission(const cmove &move)
         {
             _castlePerm &= (blackK | whiteK | whiteQ);
         }
-        else if (_sq[fromSq].getColor() == light && fromSq == 63)
+        else if (_sq[fromSq].getColor() == dark && fromSq == 63)
         {
             _castlePerm &= (blackQ | whiteK | whiteQ);
         }
