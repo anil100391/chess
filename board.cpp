@@ -26,6 +26,7 @@ char cpiece::toString() const noexcept
     case cpiece::wrook: return 'R';
     case cpiece::wqueen: return 'Q';
     case cpiece::wking: return 'K';
+    default: break;
     }
     return '.';
 }
@@ -141,10 +142,8 @@ std::string cboard::toFen() const
         }
 
         if ( emptyCounter != 0 )
-        {
             fen += std::to_string( emptyCounter );
-            emptyCounter = 0;
-        }
+
         if ( r != static_cast<int>(BOARD_RANK::ONE) )
             fen += "/";
     }
@@ -468,8 +467,6 @@ vector<cmove> cboard::generateCastleMoves(int atSq) const
     int canBlackCastle = (blackQ | blackK);
     int canWhiteCastle = (whiteQ | whiteK);
 
-    int atSqRank = static_cast<int>(rank(atSq));
-    int atSqFile = static_cast<int>(file(atSq));
     vector<cmove> moves;
     color col = _sq[atSq].getColor();
     if ((col == dark && !(canBlackCastle & _castlePerm)) ||
@@ -767,7 +764,6 @@ void cboard::updateEmpassantSq(const cmove &move)
 void cboard::updateCastlePermission(const cmove &move)
 {
     int fromSq = move.getfromSq();
-    int toSq = move.gettoSq();
 
     if (isKing(_sq[fromSq]))
     {

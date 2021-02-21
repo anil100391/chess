@@ -94,7 +94,7 @@ int main(int argc, char * argv[])
             int depth = std::stoi(commandArg);
 
             PerftResult res;
-            uint64_t perftNodes = Perft( b, depth, res );
+            Perft( b, depth, res );
             std::cout << "perft nodes: " << res.nodes << std::endl;
             std::cout << "perft captures: " << res.nd[1].captures << std::endl;
             std::cout << "perft enpassant: " << res.nd[1].enpassant << std::endl;

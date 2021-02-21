@@ -1,7 +1,6 @@
 #ifndef _PERFT_H_
 #define _PERFT_H_
 
-#include <cstdint>
 #include <map>
 #include "board.h"
 
@@ -39,7 +38,7 @@ uint64_t Perft( cboard &b, unsigned int depth, PerftResult &result )
         return 1;
     }
 
-    auto moves = b.generateMoves(); 
+    auto moves = b.generateMoves();
     auto &nd = result.nd[depth];
     for ( auto move : moves )
     {
