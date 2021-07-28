@@ -65,7 +65,8 @@ uint64_t Perft( cboard &b, unsigned int depth, PerftResult &result )
         b.makeMove( move );
         if ( b.isInCheck( b.sideToMove() ) )
         {
-            if ( b.isCheckmate() )
+            bool checkmate = b.generateMoves().empty();
+            if ( checkmate )
                 nd.checkmate += 1;
             nd.checks += 1;
         }

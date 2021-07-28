@@ -3,6 +3,7 @@
 #include <cassert>
 #include <algorithm>
 #include <string>
+#include <ctime>
 #include "board.h"
 #include "perft.h"
 using namespace std;
@@ -93,13 +94,16 @@ int main(int argc, char * argv[])
         {
             int depth = std::stoi(commandArg);
 
+            auto now = clock();
             PerftResult res;
             Perft( b, depth, res );
+            auto elapsed = clock() - now;
             std::cout << "perft nodes: " << res.nodes << std::endl;
             std::cout << "perft captures: " << res.nd[1].captures << std::endl;
             std::cout << "perft enpassant: " << res.nd[1].enpassant << std::endl;
             std::cout << "perft checks: " << res.nd[1].checks << std::endl;
             std::cout << "perft checkmates: " << res.nd[1].checkmate << std::endl;
+            std::cout << "time elapsed: " << (1.0f * elapsed) / CLOCKS_PER_SEC << "s" << std::endl;
         }
         else if ( command == "fen" )
         {
