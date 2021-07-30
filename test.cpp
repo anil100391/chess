@@ -233,10 +233,10 @@ int main()
                       res.nd[1].checks    != nodeIt->second.checks     ||
                       res.nd[1].checkmate != nodeIt->second.checkmate))
                 {
-					std::cout << "Failed at depth: " << depth << " \n";
+                    std::cout << "Failed at depth: " << depth << " \n";
                 }
                 else
-					std::cout << "Passed at depth: " << depth << " \n";
+                    std::cout << "Passed at depth: " << depth << " \n";
             }
         }
     }
