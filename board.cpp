@@ -181,7 +181,7 @@ vector<cmove> cboard::generateMoves() const
 
     // remove illegal moves
     {
-        cboard copy = *this;
+        cboard &copy = const_cast<cboard&>(*this);
         auto it = std::partition( moves.begin(), moves.end(),
                                   [&copy](const cmove& m)
                                   {
