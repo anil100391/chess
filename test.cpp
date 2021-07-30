@@ -112,7 +112,7 @@ static const PerftResult* GetPerftResults( const char* fen, int depth )
             posres[5].nd[1].captures = 52051;
             posres[5].nd[1].enpassant = 1165;
             posres[5].nd[1].checks = 52950;
-            posres[5].nd[1].checkmate = 17;
+            posres[5].nd[1].checkmate = 0;
 
             // posres[6].nodes = 11030083;
             // posres[6].nd[1].captures = 940350;
